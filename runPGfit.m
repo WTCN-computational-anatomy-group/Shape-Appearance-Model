@@ -65,6 +65,6 @@ disp(' "input":[["rc1SCAN01.nii","rc2SCAN01.nii"],');
 disp('          ["rc1SCAN02.nii","rc2SCAN02.nii"],');
 disp('          ["rc1SCAN03.nii","rc2SCAN03.nii"],');
 disp('                  :                :        ');
-disp('          ["rc1SCANXX.nii","rc2SCANXX.nii"]]');
+disp('          ["rc1SCANXX.nii","rc2SCANXX.nii"]]}');
 disp(' ');
 
