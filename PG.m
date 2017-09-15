@@ -67,7 +67,8 @@ for iter = 1:maxit,
     fprintf('%-3d    ', iter);
 
     [Wa,Wv,WWa,WWv,WW,s.omega] = Mstep(mu,Wa,Wv,noise,B,ss.ZZ,EA,WWa,WWv,s);
-
+    
+    lb_pW    = -0.5*trace(B*WW); % + const
     RegZ     = double(s.wt(1)*EA + s.wt(2)*WW);
     ss       = PGdistribute('UpdateZ',mu,Wa,Wv,noise,RegZ,s);
     lb_L     = ss.L;
@@ -90,13 +91,13 @@ for iter = 1:maxit,
 
     switch lower(s.likelihood)
     case {'normal','laplace'}
-        lb = lb_L + lb_pmu + lb_A + lb_lam;
-        fprintf(' %8.6g %8.6g %8.6g %8.6g     %8.6g   %g ', ...
-             lb_L,  lb_pmu,  lb_A,  lb_lam,  lb, s.omega);
+        lb = lb_L + lb_pW + lb_pmu + lb_A + lb_lam;
+        fprintf(' %8.6g %8.6g %8.6g %8.6g %8.6g     %8.6g   %g ', ...
+             lb_L,  lb_pW,  lb_pmu,  lb_A,  lb_lam,  lb, s.omega);
     case {'binomial','multinomial'}
-        lb = lb_L + lb_pmu + lb_A;
-        fprintf(' %8.6g %8.6g %8.6g    %g  %g ', ...
-            lb_L,  lb_pmu,  lb_A, lb, s.omega);
+        lb = lb_L + lb_pW + lb_pmu + lb_A;
+        fprintf(' %8.6g %8.6g %8.6g %8.6g    %g  %g ', ...
+            lb_L,  lb_pW,  lb_pmu,  lb_A, lb, s.omega);
     case {'other'}
     otherwise
         error('Unknown likelihood function.');
