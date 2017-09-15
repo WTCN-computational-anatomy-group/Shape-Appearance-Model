@@ -68,8 +68,6 @@ for iter = 1:maxit,
 
     [Wa,Wv,WWa,WWv,WW,s.omega] = Mstep(mu,Wa,Wv,noise,B,ss.ZZ,EA,WWa,WWv,s);
 
-    lb_pW    = -0.5*trace(B*WW); % + const
-
     RegZ     = double(s.wt(1)*EA + s.wt(2)*WW);
     ss       = PGdistribute('UpdateZ',mu,Wa,Wv,noise,RegZ,s);
     lb_L     = ss.L;
@@ -92,13 +90,13 @@ for iter = 1:maxit,
 
     switch lower(s.likelihood)
     case {'normal','laplace'}
-        lb = lb_L + lb_pW + lb_pmu + lb_A + lb_lam;
-        fprintf(' %8.6g %8.6g %8.6g %8.6g %8.6g     %8.6g   %g ', ...
-             lb_L,  lb_pW,  lb_pmu,  lb_A,  lb_lam,  lb, s.omega);
+        lb = lb_L + lb_pmu + lb_A + lb_lam;
+        fprintf(' %8.6g %8.6g %8.6g %8.6g     %8.6g   %g ', ...
+             lb_L,  lb_pmu,  lb_A,  lb_lam,  lb, s.omega);
     case {'binomial','multinomial'}
-        lb = lb_L + lb_pW + lb_pmu + lb_A;
-        fprintf(' %8.6g %8.6g %8.6g %8.6g    %g  %g ', ...
-            lb_L,  lb_pW,  lb_pmu,  lb_A, lb, s.omega);
+        lb = lb_L + lb_pmu + lb_A;
+        fprintf(' %8.6g %8.6g %8.6g    %g  %g ', ...
+            lb_L,  lb_pmu,  lb_A, lb, s.omega);
     case {'other'}
     otherwise
         error('Unknown likelihood function.');
@@ -117,11 +115,11 @@ for iter = 1:maxit,
     save(fullfile(s.result_dir,['train' s.result_name '.mat']),...
         'Wa','Wv','WWa','WWv','dat','ss','EA','B','RegZ','mu','s','noise','dat');
 
-    subplot(2,2,1); image(ColourPic(mu,s.likelihood)); axis image ij off;
-    subplot(2,2,2); imagesc(abs(ss.ZZ)/ss.N);  colorbar; axis image; title ZZ
-    subplot(2,2,3); imagesc(abs(WW));  colorbar; axis image; title WW
-    subplot(2,2,4); imagesc(abs(WWv)); colorbar; axis image; title WWv
-    drawnow
+    %subplot(2,2,1); image(ColourPic(mu,s.likelihood)); axis image ij off;
+    %subplot(2,2,2); imagesc(abs(ss.ZZ)/ss.N);  colorbar; axis image; title ZZ
+    %subplot(2,2,3); imagesc(abs(WW));  colorbar; axis image; title WW
+    %subplot(2,2,4); imagesc(abs(WWv)); colorbar; axis image; title WWv
+    %drawnow
 
     fprintf('\n');
     %if s.omega<0.001, break; end
