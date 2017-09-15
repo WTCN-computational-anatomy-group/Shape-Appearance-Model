@@ -24,6 +24,7 @@ mu     = zeros(d,'single');
 N      = double(nanmax(s0(:)));
 
 noise.nu_factor = 1;
+if isfield(s,'nu_factor'), noise.nu_factor = s.nu_factor; end
 
 for it=1:8
 
