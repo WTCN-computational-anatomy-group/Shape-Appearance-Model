@@ -72,10 +72,10 @@ case {'multinomial','categorical'}
     if nargin<=1, return; end
 
     sig(~msk) = NaN;
-    g   = sig-f1;
+    g   = sig-f;
     H   = zeros([d(1:3) d(4)*(d(4)+1)/2],'single');
     for l1 = 1:d(4)
-        H(:,:,:,l1) = sig(:,:,:,l1) - sig(:,:,:,l1).^2 + 1e-3*d(4)^2;
+        H(:,:,:,l1) = sig(:,:,:,l1) - sig(:,:,:,l1).^2 + 1e-4*d(4)^2;
     end
     l = d(4);
     for l1 = 1:d(4)
