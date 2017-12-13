@@ -1,12 +1,13 @@
-function [s0,s1,s2] = SuffStats(dat,s)
+function [s0,s1,s2,mat] = SuffStats(dat,s)
 % Compute sufficient statistics
-% FORMAT [s0,s1,s2] = SuffStats(dat)
+% FORMAT [s0,s1,s2,mat] = SuffStats(dat)
 %
 % dat - Data. Uses dat(n).f
 %
 % s0  - Zeroeth moment (number of observations)
 % s1  - First moment (sum over observations)
 % s2  - Second moment (sum of squares of observations)
+% mat - Voxel to world mapping
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
@@ -17,6 +18,7 @@ function [s0,s1,s2] = SuffStats(dat,s)
 s0 = single(0);
 s1 = single(0);
 s2 = single(0);
+mat = eye(4);
 for n=1:numel(dat)
     f        = GetDat(dat(n),s);
     d        = [size(f),1,1];

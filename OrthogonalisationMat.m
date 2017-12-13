@@ -1,4 +1,21 @@
 function [T,iT,A] = OrthogonalisationMat(ZZ,S,WW,N,s)
+% Orthogonalisation matrix
+% FORMAT [T,iT,A] = OrthogonalisationMat(ZZ,S,WW,N,s)
+% ZZ    - Z*Z', where Z are the latent variables
+% S     - E[Z*Z'] = Z*Z' + S
+% WW    - Wa'*La*Wa + Wv'*Lv*Wv
+% N     - size(Z,2)
+% s     - Settings. Passed to SetReg.m
+%
+% T     - Transform
+% iT    - Inverse transform
+% A     - Returned from SetReg.m
+%__________________________________________________________________________
+% Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id$
+
 Ka = s.Ka;
 Kv = s.Kv;
 K  = size(ZZ,1);
@@ -11,7 +28,7 @@ end
 T   = zeros(K,K);
 iT  = zeros(K,K);
 for i=1:numel(ind)
-    [T(ind{i},ind{i}),iT(ind{i},ind{i})] = OrthogonalisationMatrix(ZZ(ind{i},ind{i}),WW(ind{i},ind{i}),N);
+    [T(ind{i},ind{i}),iT(ind{i},ind{i})] = OrthogonalisationMatrix(ZZ(ind{i},ind{i}),WW(ind{i},ind{i}));
 end
 
 ZZ1  = T*ZZ*T';
@@ -22,7 +39,7 @@ q    = zeros(K,1)-0.5*log(N);
 q    = min(max(q,-10),10);
 Q    = diag(exp(q));
 A    = SetReg(Q*EZZ1*Q,N,s);
-E    = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1*inv(Q*Q)));
+E    = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1/(Q*Q)));
 %fprintf('\n%d %g %g %g\n', 0, 0.5*trace(Q*ZZ1*Q*A), 0.5*trace(WW1*inv(Q*Q)), E)
 
 for iter=1:100
@@ -45,7 +62,7 @@ for iter=1:100
         Q  = diag(exp(q));
 
         oE = E;
-        E  = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1*inv(Q*Q)));
+        E  = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1/(Q*Q)));
         %fprintf('%d %g %g %g\n', iter, 0.5*trace(Q*ZZ1*Q*A), 0.5*trace(WW1*inv(Q*Q)), E)
         if (oE-E)/E < 1e-8, break; end
     end
@@ -56,13 +73,12 @@ iT = iT/Q;
 
 
 
-function [T,iT] = OrthogonalisationMatrix(ZZ,WW,N)
+function [T,iT] = OrthogonalisationMatrix(ZZ,WW)
 % Use SVD to orthognalise
-% FORMAT [T,iT] = OrthogonalisationMatrix(ZZ,WW,N)
+% FORMAT [T,iT] = OrthogonalisationMatrix(ZZ,WW)
 %
 % ZZ - Z*Z' + S
 % WW  - W'*L*W
-% N   - Number of observations
 %
 % T   - Orthogonalisation matrix
 % iT  - Inverse of T - roughly
@@ -83,10 +99,10 @@ end
 Dz       = diag(sqrt(diag(Dz2)+eps));
 Dw       = diag(sqrt(diag(Dw2)+eps));
 [U,D,V]  = svd(Dw*Vw'*Vz*Dz');
-iDz      = inv(Dz+max(abs(Dz(:)))*1e-9*eye(size(Dz)));
-iDw      = inv(Dw+max(abs(Dw(:)))*1e-9*eye(size(Dw)));
-T        = D*V'*iDz*Vz';
-iT       = Vw*iDw*U;
+Dz       = Dz+max(abs(Dz(:)))*1e-9*eye(size(Dz));
+Dw       = Dw+max(abs(Dw(:)))*1e-9*eye(size(Dw));
+T        = D*V'*(Dz\Vz');
+iT       = Vw*(Dw\U);
 
 
 % %Code for working out the gradients and Hessians

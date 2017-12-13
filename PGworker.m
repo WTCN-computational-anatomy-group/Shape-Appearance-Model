@@ -38,9 +38,9 @@ case {'updatez'}
     Wa     = varargin{2};
     Wv     = varargin{3};
     noise  = varargin{4};
-    EA     = varargin{5};
+    A      = varargin{5};
     s      = varargin{6};
-    [data,stats] = UpdateAllZ(data,mu,Wa,Wv,noise,EA,s);
+    [data,stats] = UpdateZall(data,mu,Wa,Wv,noise,A,s);
     varargout{1} = stats;
     PrivateData('set',name,nw,data);
 
@@ -68,6 +68,17 @@ case {'wagradhess'}
     varargout{2} = Ha;
     varargout{3} = nll;
 
+case {'mugradhess'}
+    mu     = varargin{1};
+    Wa     = varargin{2};
+    Wv     = varargin{3};
+    noise  = varargin{4};
+    s      = varargin{5};
+    [gmu,Hmu,nll] = muGradHess(data,mu,Wa,Wv,noise,s);
+    varargout{1} = gmu;
+    varargout{2} = Hmu;
+    varargout{3} = nll;
+
 case {'computeof'}
     mu     = varargin{1};
     Wa     = varargin{2};
@@ -88,10 +99,11 @@ case {'addrandz'}
     PrivateData('set',name,nw,data);
 
 case {'suffstats'}
-    [s0,s1,s2]  = SuffStats(data,varargin{:});
+    [s0,s1,s2,mat]  = SuffStats(data,varargin{:});
     varargout{1} = s0;
     varargout{2} = s1;
     varargout{3} = s2;
+    varargout{4} = mat;
 
 case {'collect'}
     % This would be done differently within a privacy-preserving setting

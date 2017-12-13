@@ -1,6 +1,6 @@
-function [Wa,Wv,WWa,WWv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
+function [Wa,Wv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
 % Update the basis functions
-% FORMAT  [Wa,Wv,WWa,WWv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
+% FORMAT  [Wa,Wv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
 % mu    - Mean
 % Wa    - Appearance basis functions
 % Wv    - Shape basis functions
@@ -14,8 +14,6 @@ function [Wa,Wv,WWa,WWv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
 %
 % Wa    - Appearance basis functions
 % Wv    - Shape basis functions
-% WWa   - Wa'*La*Wa
-% WWv   - Wv'*Lv*Wv
 % WW    - Combined WWa and WWv
 % omega - step size for Gauss-Newton update of Wv
 %__________________________________________________________________________
@@ -23,9 +21,6 @@ function [Wa,Wv,WWa,WWv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
 
 % John Ashburner
 % $Id$
-
-d    = [size(mu) 1 1 1];
-d    = d(1:4);
 
 Ka   = size(Wa,5);
 inda = 1:Ka;
@@ -61,7 +56,7 @@ if numel(indv)>0
 
         nll0        = nll+0.5*s.wt(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.wt(2)*trace(WW*ZZ);
         %fprintf(' [%g %g %g %g] ', nll, 0.5*s.wt(1)*trace(WW*B), 0.5*s.wt(1)*trace(A*ZZ), 0.5*s.wt(2)*trace(WW*ZZ));
-        fprintf('%g ', nll0);
+        fprintf('%9.6g ', nll0);
 
         for subit=1:8
             Wv            = UpdateWv(Wv,gv,Hv,RegW(indv,indv),s);
@@ -75,6 +70,7 @@ if numel(indv)>0
             else
                 nll1         = PGdistribute('ComputeOF',mu,Wa,Wv,noise,s);
             end
+
             %fprintf(' [%g %g %g %g] ', nll1, 0.5*s.wt(1)*trace(WW*B), 0.5*s.wt(1)*trace(A*ZZ), 0.5*s.wt(2)*trace(WW*ZZ));
 
             nll              = nll1 + 0.5*s.wt(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.wt(2)*trace(WW*ZZ);
@@ -84,14 +80,14 @@ if numel(indv)>0
                 s.omega = min(s.omega*1.1,1);
                 break;
             else
-                s.omega = max(s.omega*0.5,0.01);
+                s.omega = max(s.omega*0.5,0.001);
                 for k=1:numel(indv)
                     Wv(:,:,:,:,k) = prev.Wv(:,:,:,:,k);
                 end
                 WWv   = prev.WWv;
             end
         end
-        fprintf('%g ', nll);
+        fprintf('%9.6g ', nll);
     end
 else
     if numel(inda)>0
@@ -107,9 +103,9 @@ WW            = zeros(K);
 WW(inda,inda) = WW(inda,inda) + WWa;
 WW(indv,indv) = WW(indv,indv) + WWv;
 
-omega = s.omega;
+omega         = s.omega;
 
-if isfield(s,'ondisk') && s.ondisk
+if isfield(s,'ondisk') && s.ondisk && exist('prev','var')
     DeleteFA(prev.Wv,gv,Hv);
     if numel(inda)>0
         DeleteFA(ga,Ha);

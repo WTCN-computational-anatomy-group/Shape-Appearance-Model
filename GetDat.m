@@ -1,9 +1,10 @@
-function f = GetDat(dat,s)
+function [f,mat] = GetDat(dat,s)
 % Read in the image data
 % FORMAT f = GetDat(dat,s)
 % dat - a data structure that includes image information
 % s   - Settings. Uses s.likelihood.
 % f   - The resulting image
+% mat - Voxel to world mapping
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -14,6 +15,7 @@ if ~isfield(dat,'f')
     error('No data.');
 end
 if nargin<2, s.likelihood = 'normal'; end
+mat = eye(4);
 
 switch class(dat.f)
 case {'nifti','char'}
@@ -27,11 +29,13 @@ case {'nifti','char'}
             return
         case {'.nii','.img'}
             Nii = nifti(dat.f);
+            mat = Nii.mat;
         otherwise
             error('Unknown file extension (%s).', ext);
         end
     else
         Nii = dat.f;
+        mat = Nii.mat;
     end
 
     D = zeros(numel(Nii),6);
@@ -45,8 +49,8 @@ case {'nifti','char'}
     end
     d = [D(1,1:3) sum(prod(D(:,4:5),2))];
     slices = 1:d(3);
-    if isfield(dat,'slices')
-        slices = dat.slices;
+    if isfield(s,'slices') && ~isempty(s.slices)
+        slices = s.slices;
         d(3)   = numel(slices);
     end
     switch s.likelihood

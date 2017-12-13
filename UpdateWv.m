@@ -17,9 +17,10 @@ function Wv = UpdateWv(Wv,gv,Hv,RegW,s)
 if isempty(gv)
     return;
 end
-if isfield(s,'verbose') && s.verbose == true, verb = true; else, verb = false; end
+if isfield(s,'verbose') && s.verbose == true, verb = true; else verb = false; end
 if verb, fprintf('\nWv: '); end
 for k=1:size(gv,5),
+    spm_diffeo('boundary',0);
     g1            = spm_diffeo('vel2mom', Wv(:,:,:,:,k), [s.vx RegW(k,k)*s.v_settings]);
     g             = gv(:,:,:,:,k) + g1;
     dv0           = spm_diffeo('fmg', Hv(:,:,:,:,k), g,  [s.vx RegW(k,k)*s.v_settings s.mg_its]);

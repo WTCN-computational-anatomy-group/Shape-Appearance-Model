@@ -45,8 +45,7 @@ else
     Ha = zeros([d(1:3) d4 Ka],'single');
 end
 
-if nargout>=3, comp_nll = true; end
-nll = 0; % Not computed yet
+nll = 0;
 
 % Compute 1st and 2nd derivatives w.r.t. appearance model
 for k=1:Ka,
@@ -57,24 +56,19 @@ end
 for n1=1:batchsize:numel(dat)
     nn    = n1:min(n1+(batchsize-1),numel(dat));
     z     = {dat(nn).z};
-    S     = {dat(nn).S};
+   %S     = {dat(nn).S};
     cell1 = GetV0(z,Wv);
     cell2 = GetA0(z,Wa,mu);
     dat1  = dat(nn);
 
     parfor n=1:numel(nn)
-        iphi    = GetIPhi(cell1{n},s);
-        a0      = cell2{n};
-        f0      = GetDat(dat1(n),s);
-        if comp_nll
-            nll = nll - ComputeLL(f0,iphi,a0,s,noise);
-        end
-
-        [f1,rho] = Push(f0,iphi);
-        [g,H]    = AppearanceDerivs(f1,rho,a0,noise,s);
-
-        cell1{n} = g;
-        cell2{n} = H;
+        iphi      = GetIPhi(cell1{n},s);
+        a0        = cell2{n};
+        f         = GetDat(dat1(n),s);
+        [tmp,g,H] = AppearanceDerivs(f,a0,iphi,noise,s);
+        nll       = nll - tmp;
+        cell1{n}  = g;
+        cell2{n}  = H;
     end
 
     for k=1:Ka,

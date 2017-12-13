@@ -113,40 +113,57 @@ case {'updatez'}
     mu     = varargin{1};
     Wa     = varargin{2};
     Wv     = varargin{3};
-    noise   = varargin{4};
-    EA     = varargin{5};
+    noise  = varargin{4};
+    A      = varargin{5};
     s      = varargin{6};
     if par
-        N   = 0;
-        Z   = 0;
-        ZZ  = 0;
-        sS  = 0;
-        L   = 0;
-        gmu = single(0);
-        Hmu = single(0);
-        s0  = 0;
-        s1  = 0;
-        SmoSuf = 0;
+        CompSmo = false;
+        CompMu  = false;
+
+        N  = 0;
+        L  = 0;
+        s0 = 0;
+        s1 = 0;
+        Z  = 0;
+        ZZ = 0;
+        sS = 0;
+        if CompSmo
+            SmoSuf = 0;
+        end
+        if CompMu
+            gmu    = single(0);
+            Hmu    = single(0);
+        end
+
         parfor nw=1:NW
-            st  = PGworker('UpdateZ',name, nw,mu,Wa,Wv,noise,EA,s);
+            st  = PGworker('UpdateZ',name, nw,mu,Wa,Wv,noise,A,s);
             if ~isempty(st)
-                N   = N   + st.N;
-                Z   = Z   + st.Z;
-                ZZ  = ZZ  + st.ZZ;
-                sS  = sS  + st.sS;
-                L   = L   + st.L;
-                gmu = gmu + st.gmu;
-                Hmu = Hmu + st.Hmu;
-                s0  = s0  + st.s0;
-                s1  = s1  + st.s1;
-                SmoSuf = SmoSuf + st.SmoSuf;
+                N      = N  + st.N;
+                L      = L  + st.L;
+                s1     = s1 + st.s1;
+                s0     = s0 + st.s0;
+                Z      = Z  + st.Z;
+                ZZ     = ZZ + st.ZZ;
+                sS     = sS + st.sS;
+                if CompSmo
+                    SmoSuf = SmoSuf + st.SmoSuf;
+                end
+                if CompMu
+                    gmu    = gmu    + st.gmu;
+                    Hmu    = Hmu    + st.Hmu;
+                end
             end
         end
-        stats = struct('N',N, 'Z',Z, 'ZZ',ZZ, 'sS',sS, 'L',L, 'gmu',gmu, 'Hmu',Hmu,...
-                       's0',s0, 's1',s1, 'SmoSuf',SmoSuf);
-
+        stats = struct('N',N, 'Z',Z, 'ZZ',ZZ, 'sS',sS, 's0',s0, 's1',s1, 'L', L);
+        if CompSmo
+            stats.SmoSuf = SmoSuf;
+        end
+        if CompMu
+            stats.gmu    = gmu;
+            stats.Hmu    = Hmu;
+        end
     else
-        stats  = PGworker('UpdateZ',name, 1,mu,Wa,Wv,noise,EA,s);
+        stats  = PGworker('UpdateZ',name, 1,mu,Wa,Wv,noise,A,s);
     end
     varargout{1} = stats;
 
@@ -244,6 +261,49 @@ case {'wagradhess'}
         varargout{3} = 0;
     end
 
+case {'mugradhess'}
+    mu     = varargin{1};
+    Wa     = varargin{2};
+    Wv     = varargin{3};
+    noise  = varargin{4};
+    s      = varargin{5};
+
+    nll      = 0;
+    gmu_cell = cell(1,NW);
+    Hmu_cell = cell(1,NW);
+    if par
+        parfor nw=1:NW
+            [gmu_cell{nw},Hmu_cell{nw},nll1] = PGworker('muGradHess',name,nw,mu,Wa,Wv,noise,s);
+            nll = nll + nll1;
+        end
+    else
+        [gmu_cell{1},Hmu_cell{1},nll] = PGworker('muGradHess',name,1,mu,Wa,Wv,noise,s);
+    end
+
+    % Needs to deal with possibly empty results
+    rw = 0;
+    for nw=1:NW
+        if ~isempty(gmu_cell{nw})
+            rw = nw;
+            break;
+        end
+    end
+    if rw
+        for nw=(rw+1):NW
+            if ~isempty(gmu_cell{nw})
+                gmu_cell{rw}(:,:,:,:) = gmu_cell{rw}(:,:,:,:) + gmu_cell{nw}(:,:,:,:);
+                Hmu_cell{rw}(:,:,:,:) = Hmu_cell{rw}(:,:,:,:) + Hmu_cell{nw}(:,:,:,:);
+            end
+        end
+        varargout{1} = gmu_cell{rw};
+        varargout{2} = Hmu_cell{rw};
+        varargout{3} = nll;
+    else
+        varargout{1} = [];
+        varargout{2} = [];
+        varargout{3} = [];
+    end
+
 case {'computeof'}
     mu     = varargin{1};
     Wa     = varargin{2};
@@ -287,7 +347,7 @@ case {'suffstats'}
     s2 = single(0);
     if par
     parfor nw=1:NW
-        [t0,t1,t2]   = PGworker('Suffstats',name,nw,varargin{:});
+        [t0,t1,t2,mat]   = PGworker('Suffstats',name,nw,varargin{:});
         if ~isempty(t0)
             s0 = s0 + t0;
             s1 = s1 + t1;
@@ -295,11 +355,12 @@ case {'suffstats'}
         end
     end
     else
-        [s0,s1,s2]   = PGworker('Suffstats',name,1,varargin{:});
+        [s0,s1,s2,mat]   = PGworker('Suffstats',name,1,varargin{:});
     end
     varargout{1} = s0;
     varargout{2} = s1;
     varargout{3} = s2;
+    varargout{4} = mat;
 
 otherwise
     error('"%s" unknown.');

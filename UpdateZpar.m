@@ -2,13 +2,13 @@ function [z,S,L,omisc] = UpdateZpar(z,f,mu,Wa,Wv,A,s,noise)
 % Update latent variables for one observation
 % FORMAT [z,S,L,omisc] = UpdateZpar(z,f,mu,Wa,Wv,A,s,noise)
 %
-% z     - Vector of latent variables
-% f     - This observation
+% z     - Cell array of latent variables
+% f     - Cell array of observations
 % mu    - Mean
 % Wa    - Appearance basis functions
 % Wv    - Shape basis functions
 % A     - Precision matrix of z (assumed zero mean)
-% s     - Settings. Uses s.v_settings, s.nit, s.bs_args, s.vx & s.int_args
+% s     - Settings. Uses s.v_settings, s.nit, s.vx & s.int_args
 % noise - Noise precision (Gaussian model only)
 %
 % S     - Covariance of uncertainty of z (Laplace approximation)
@@ -21,87 +21,47 @@ function [z,S,L,omisc] = UpdateZpar(z,f,mu,Wa,Wv,A,s,noise)
 % John Ashburner
 % $Id$
 
-verb = false;
-if isfield(s,'verbose') && s.verbose>0, verb = true; end
+CompSmo = false;
+CompMu  = false;
 
-tic
 a0   = GetA0(z,Wa,mu); % Compute linear combination of appearance modes
-if verb, fprintf('GetA0: %g sec\n', toc); end
-tic
 v0   = GetV0(z,Wv);    % Linear combination of shape components
-if verb, fprintf('GetV0: %g sec\n', toc); end
-
-subj = struct('f',f,'z',z,'a0',a0,'v0',v0,'iphi',[],'f1',[],'rho',[],'g',[],'H1',[],'nll',[],'S',[],'dz',[],'da',[],'dv',[],'stop',false);
+iphi = GetIPhi(v0,s);
+subj = struct('f',f,'z',z,'a0',a0,'v0',v0,'iphi',iphi,'a',[],'Ha',[],'g',[],'H1',[],'nll',[],'S',[],'dz',[],'da',[],'dv',[],'stop',false);
 
 % Approximate memory requirements per subject: f+f1+a0+da, v0+iphi+dv+rho, B
 % 4*(prod(d)*4 + prod(d(1:3))*(3*3+1))
 % 4*prod(d(1:3))*(d(4)*4 + 3*3+1) + 4*prod(d(1:2))*K
 
-tic
-parfor n=1:numel(subj)
-    if size(Wv,5)>0  % Includes a shape model
-        subj(n).iphi = GetIPhi(subj(n).v0,s);           % Generate diffeomorphism
-        [f1,rho]     = Push(subj(n).f,subj(n).iphi);    % Use the resampling's adjoint operator
-        subj(n).f1   = f1;
-        subj(n).rho  = rho;
-
-    else             % No shape model
-        % Generate f1 and rho without warping the data
-        msk = all(isfinite(subj(n).f),4);
-        f1  = zeros(size(subj(n).f),'single');
-        for i=1:size(f1,4)
-            tmp = subj(n).f(:,:,:,i);
-            tmp(~msk) = 0;
-            f1(:,:,:,i) = tmp;
-        end
-        subj(n).f1      = f1;
-        subj(n).rho     = single(msk);
-        subj(n).iphi    = [];
-    end
-
-end
-if verb, fprintf('Generate %d warped images: %g sec\n', numel(subj), toc); end
-
-
 A   = double(A); % Use double
 K   = size(A,1);
 
-parfor n=1:numel(subj)
-    subj(n).nll = -ComputeLL(subj(n).f,subj(n).iphi,subj(n).a0,s,noise) + 0.5*subj(n).z'*A*subj(n).z; % Initial objective function
-end
-
-
 for subit=1:s.nit
-
-    for n=1:numel(subj)
+    parfor n=1:numel(subj)
         if ~subj(n).stop
             subj(n).g  = 0; % Gradients
             subj(n).H1 = 0; % Hessian
+            [ll,subj(n).a,subj(n).Ha] = AppearanceDerivs(subj(n).f,subj(n).a0,subj(n).iphi,noise,s);
+            subj(n).nll = -ll + 0.5*subj(n).z'*A*subj(n).z;
         end
     end
 
-    tim = [0 0];
     for x3=1:size(Wv,3)
         % Work slice by slice to save memory
-        tic;
         wa = Wa(:,:,x3,:,:);
         wv = Wv(:,:,x3,:,:);
-        tim(1) = tim(1) + toc;
 
-        tic;
         % Passing lots of data (broadcast variables) within the parfor may be slowing things down
-        for n=1:numel(subj)
+        parfor n=1:numel(subj)
             if ~subj(n).stop
-                [dg,dh]    = SliceComp(subj(n).z,subj(n).f1(:,:,x3,:),subj(n).rho(:,:,x3,:),subj(n).a0,x3,wa,wv,noise,s);
-                subj(n).g  = subj(n).g + dg;
+                [dg,dh]    = SliceComp(subj(n).z,subj(n).a(:,:,x3,:),subj(n).Ha(:,:,x3,:),subj(n).a0,x3,wa,wv,s);
+                subj(n).g  = subj(n).g  + dg;
                 subj(n).H1 = subj(n).H1 + dh;
             end
         end
-        tim(2) = tim(2)+toc;
     end
-    if verb, fprintf('%g sec & %g sec\n', tim); end
 
-    for n=1:numel(subj)
+    parfor n=1:numel(subj)
         if ~subj(n).stop
             subj(n).H1  = (subj(n).H1+subj(n).H1')/2; % Ensure totally symmetric (rounding errors)
 
@@ -112,24 +72,19 @@ for subit=1:s.nit
             end
 
             g  = subj(n).g  + double(A*subj(n).z); % Add prior term of gradient
-            H  = subj(n).H1 + double(A);   % Add prior term of hessian
+            H  = subj(n).H1 + double(A);           % Add prior term of hessian
 
-            R  = (max(diag(H))*1e-7)*eye(K); % Regularisation done in case H is singular
-            H  = H+R;
+           %R  = (max(diag(H))*1e-6)*eye(K);       % Regularisation done in case H is singular
+           %H  = H+R;
 
             subj(n).S  = inv(H); % S encodes the uncertainty of the z estimates (Laplace approximation)
             subj(n).dz = H\g;    % Search direction for updating z
         end
     end
 
-    tic
     da0    = GetA0({subj(:).dz},Wa);
-    if verb, fprintf('GetdA0: %g sec\n', toc); end
-    tic
     dv0    = GetV0({subj(:).dz},Wv);
-    if verb, fprintf('GetdV0: %g sec\n', toc); end
 
-    tic
     parfor n=1:numel(subj)
         if ~subj(n).stop
             % A Gauss-Newton update can sometimes overshoot, so a backtracking (Armijo) linesearch
@@ -142,9 +97,6 @@ for subit=1:s.nit
                 subj(n).a0   = misc.a0;
                 subj(n).v0   = misc.v0;
                 subj(n).iphi = misc.iphi;
-                [f1,rho]     = Push(subj(n).f,subj(n).iphi);
-                subj(n).f1   = f1;
-                subj(n).rho  = rho;
                 if abs(nll-subj(n).nll)<1e-3
                     subj(n).stop = true;
                 end
@@ -152,9 +104,9 @@ for subit=1:s.nit
             else
                 subj(n).stop = true;
             end
+
         end
     end
-    if verb, fprintf('Linesearches: %g sec\n', toc); end
     if all(cat(1,subj.stop)), break; end
 end
 
@@ -165,42 +117,53 @@ S = {subj.S};
 % distribution of the prior, as well as a Laplace approximation for p(f|M) = \int_z p(f,z|M) dz
 % See Section 4.4 of Bishop's book, where the Laplace approximation is described for
 % use in model comparison.
-L = 0;
+L = [0 0 0];
 for n=1:numel(subj)
-    L = L + (-subj(n).nll + 0.5*LogDet(A) - 0.5*K*log(2*pi)...
-                         -(-0.5*LogDet(subj(n).S) - 0.5*K*log(2*pi)));
+    L = L + [-subj(n).nll, (0.5*LogDet(A)-0.5*K*log(2*pi)), (0.5*LogDet(subj(n).S) + 0.5*K*log(2*pi))];
 end
 
 if nargout>=4
     % If necessary, compute some extra stuff that is used for the learning part of the model
+    omisc = struct('s0',0,'s1',0);
 
-    omisc = struct('s0',0,'s1',0,'SmoSuf',0,'gmu',single(0),'Hmu',single(0));
+    if CompSmo
+        omisc.SmoSuf = 0;
+    end
+    if CompMu
+        omisc.gmu = single(0);
+        omisc.Hmu = single(0);
+    end
 
     for n=1:numel(subj)
-        % Compute sufficient statistics used for estimating the smoothness of the residuals.
-        % These are used for adjusting the number of observations via a bit of random field theory.
-        [SmoSuf,s0,s1] = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).iphi,s);
-
+        if CompSmo
+            % Compute sufficient statistics used for estimating the smoothness of the residuals.
+            % These are used for adjusting the number of observations via a bit of random field theory.
+            [s0,s1,SmoSuf] = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).iphi,s);
+            omisc.SmoSuf   = omisc.SmoSuf + SmoSuf;
+        else
+            [s0,s1]        = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).iphi,s);
+        end
         % This was originally an adjustment to the sufficient statistics for computing the noise (Gaussian npoise model).
         % The idea was to make a Bayesian estimate that accounts for the uncertainty with which
         % z is estimated.  In practice though, the effect is tiny compared to the lack of independence
         % of the neighbouring voxels.
-        if false % Fix later
-        switch lower(s.likelihood)
-        case {'normal'}
-            % Adjustment for uncertainty in z
-            s1    = s1 + trace(H\H1)/noise.lam;
-        end
-        end
+        % if false % Fix later
+        % switch lower(s.likelihood)
+        % case {'normal'}
+        %     % Adjustment for uncertainty in z
+        %     s1    = s1 + trace(H\H1)/noise.lam;
+        % end
+        % end
 
         omisc.s1     = omisc.s1 + s1;
         omisc.s0     = omisc.s0 + s0;
-        omisc.SmoSuf = omisc.SmoSuf + SmoSuf;
 
-        % Sufficient statistics that are used for recomouting the mean
-        [gmu,Hmu]    = AppearanceDerivs(subj(n).f1,subj(n).rho,subj(n).a0,noise,s);
-        omisc.gmu    = omisc.gmu + gmu;
-        omisc.Hmu    = omisc.Hmu + Hmu;
+        if CompMu
+            % Sufficient statistics that are used for recomouting the mean
+            [gmu,Hmu]    = AppearanceDerivs(subj(n).f,subj(n).a0,subj(n).iphi,noise,s);
+            omisc.gmu    = omisc.gmu + gmu;
+            omisc.Hmu    = omisc.Hmu + Hmu;
+        end
     end
 end
 
@@ -209,15 +172,15 @@ end
 %==========================================================================
 %
 %==========================================================================
-function [g,H1] = SliceComp(z,f1,rho,a0,x3,wa,wv,noise,s)
+function [g,H1] = SliceComp(z,a,Ha,a0,x3,wa,wv,s)
 
 g   = 0;
 H1  = 0;
 
 d   = [size(a0) 1 1]; % Ensure dimensions are a 1x4 vector
 d   = d(1:4);
-Ka  = size(wa,5);    % Number of appearance modes
-Kv  = size(wv,5);    % Number of shape modes
+Ka  = size(wa,5);     % Number of appearance modes
+Kv  = size(wv,5);     % Number of shape modes
 
 if numel(z)==Ka+Kv
     % Shape and appearance are combined and controlled together
@@ -250,8 +213,6 @@ for l=1:d(4)
 end
 B(:,(1:Kv)+Koff) = B(:,(1:Kv)+Koff) + reshape(tmp,[prod(d([1 2 4])) Kv]);
 
-%[a,Ha] = AppearanceDerivs(f1(:,:,x3,:),rho(:,:,x3,:),a0(:,:,x3,:),noise,s); % Compute dE/df1
-[a,Ha] = AppearanceDerivs(f1,rho,a0(:,:,x3,:),noise,s); % Compute dE/df1
 B      = reshape(B,[prod(d([1,2,4])),K]); % Reshape for easier matrix-vector multiplication
 g      = g  + double(B'*a(:));            % dE/dz = dE/df1 * df1/dz
 
@@ -261,15 +222,6 @@ case {'multinomial','categorical'}
     % Computations are slightly different for the multinomial (categorical) noise model
     ind = Horder(d(4)); % Not all fields of Ha are saved, as it is a field of symmetric matrices (c.f. standard interview question about 1+2+3+4+...)
     B   = reshape(B,[d(1)*d(2),d(4),K]);
-%% Original code didn't exploit matrix symmetry
-%   for l1=1:d(4)
-%       B1lt = reshape(B(:,l1,:),[d(1)*d(2),K])';
-%       for l2=1:d(4)
-%           B2l = reshape(B(:,l2,:),[d(1)*d(2),K]);
-%           hal = Ha(:,:,1,ind(l1,l2));
-%           H1  = H1 + double(B1lt*bsxfun(@times,hal(:),B2l));
-%       end
-%   end
     for l1=1:d(4)
         B2l  = reshape(B(:,l1,:),[d(1)*d(2),K]);
         B1lt = B2l';
@@ -299,7 +251,6 @@ end
 function [z,nll,misc] = LineSearch(oz,onll,dz,a0o,da0,v0o,dv0,f,noise,A,s)
 verb   = isfield(s,'verbose') && s.verbose;
 if verb, fprintf(' %g  ', onll); end
-
 misc   = struct; % Some intermediate computations may be returned (if a better solution is found)
 armijo = 1;      % Line-search parameter is decreased until objective function improves
 nsubit = 6;      % Maximum number of halvings
@@ -318,11 +269,10 @@ for subit = 1:nsubit
         v0   = v0o;
         iphi = [];
     end
-    nll  = -ComputeLL(f,iphi,a0,s,noise) + 0.5*z'*A*z;
+    nll  = -AppearanceDerivs(f,a0,iphi,noise,s) + 0.5*z'*A*z;
+    if verb, fprintf(' %g', nll); end;%ShowPic(f,a0,iphi,mu,s); end
 
-    if verb, fprintf(' %g', nll); end; %ShowPic(f,iphi,a0,mu,s); end
-
-    if nll>onll+1e-3
+    if nll>onll
         armijo  = armijo*0.5;
     else
         misc.a0   = a0;
@@ -340,11 +290,11 @@ if verb, fprintf('\n'); end
 %==========================================================================
 %
 %==========================================================================
-function ShowPic(f,iphi,a0,mu,s)
+function ShowPic(f,a0,iphi,mu,s)
 %return; % This function is disabled
 
-a1  = Resamp(a0,iphi,s.bs_args);
-mu1 = Resamp(mu,iphi,s.bs_args);
+a1  = Pull(a0,iphi);
+mu1 = Pull(mu,iphi);
 
 msk = ~isfinite(f);
 ff  = f;

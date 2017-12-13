@@ -1,14 +1,15 @@
-function [g,H] = AppearanceDerivs(f1,rho,a0,noise,s)
+function [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
 % Compute gradients and Hessian w.r.t. voxelwise changes in appearance
-% FORMAT [g,H] = AppearanceDerivs(f1,rho,a0,noise,s)
+% FORMAT [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
 %
-% f1    - warped (pushed) image data (3/4D single precision)
-% rho   - counts of original voxels (3D single)
+% f     - image data (3/4D single precision)
 % a0    - atlas data (3/4D single)
+% iphi  - Deformation
 % noise - noise precision (for Gaussian noise only)
 % s     - settings
 % s.likelihood - either 'normal', 'laplace', 'binomial' or 'multinomial'.
 %
+% ll  - log-likelihood
 % g   - Voxel-wise 1st derivatives 
 % H   - Voxel-wise 2nd derivatives
 %
@@ -23,33 +24,41 @@ function [g,H] = AppearanceDerivs(f1,rho,a0,noise,s)
 % John Ashburner
 % $Id$
 
-d = [size(a0) 1 1 1];
-d = d(1:4);
+d   = [size(a0) 1 1 1];
+d   = d(1:4);
+msk = isfinite(f);
+a1  = Pull(a0,iphi);
 
 switch lower(s.likelihood)
 case {'normal','gaussian'}
     % The L2 norm works reasonably well, but future versions should probably make use
     % of non-stationary variances.
     lam = reshape(noise.lam,[1,1,1,d(4)]);
-    r   = bsxfun(@times,rho,a0)-f1;
-    g   = bsxfun(@times,noise.nu_factor*lam,r);
-    H   = bsxfun(@times,noise.nu_factor*lam,rho);
+    D   = sum(msk(:));
+    ll  = 0;
+    for l=1:d(4)
+        a1l = a1(:,:,:,l);
+        fl  = f(:,:,:,l);
+        mskl = msk(:,:,:,l);
+        ll  = ll + noise.nu_factor*0.5*(D*(log(noise.lam(l)) - log(2*pi)) - noise.lam(l)*sum(sum(sum((fl(mskl)-a1l(mskl)).^2))));
+    end
+    if nargin<=1, return; end
 
-case {'laplace'}
-    % The L1 norm does not work so well in practice.  Maybe its a bug, or maybe
-    % its simply not a great approach.
-    lam = reshape(noise.lam,[1,1,1,d(4)]);
-    r   = a0 - bsxfun(@rdivide,f1,rho+1e-6);
-    q   = 2./sqrt(bsxfun(@times,lam/2,r.^2)+0.01);
-    H   = bsxfun(@times,bsxfun(@times,noise.nu_factor*lam,q),rho);
-    g   = H.*r;
+    r   = a1-f;
+    g   = bsxfun(@times,noise.nu_factor*lam,r);
+    H   = bsxfun(@times,noise.nu_factor*lam,single(msk));
 
 case {'binomial','binary'}
     % For simple binary (or almost binary) images
-    ea  = exp(a0);
+    a1  = min(a1,40);
+    ea  = exp(a1);
+    ll  = noise.nu_factor*(sum(sum(sum(a1(msk).*f(msk) - log(1+ea(msk)),3),2),1));
+    if nargin<=1, return; end
+
     sig = ea./(1+ea);
-    g   = noise.nu_factor*(rho.*sig-f1);
-    H   = noise.nu_factor*(rho.*(sig.*(1-sig) + 1e-3));
+    sig(~msk) = NaN;
+    g   = noise.nu_factor*(sig-f);
+    H   = noise.nu_factor*((sig.*(1-sig) + 1e-3));
 
 case {'multinomial','categorical'}
     % Could be made more efficient in terms of disk I/O etc.  This representation
@@ -57,17 +66,22 @@ case {'multinomial','categorical'}
     % one in spm12/toolbox/Shoot/spm_shoot_blur.m , which works with the subspace
     % null(ones(1,d(4))).  This approach may also increase stability as the Hessian
     % of the likelihood would not be singular.
-    sig = SoftMax(a0);
-    g   = bsxfun(@times,rho,sig)-f1;
+
+    [sig,ll] = SoftMax(a1);
+    ll       = noise.nu_factor*ll;
+    if nargin<=1, return; end
+
+    sig(~msk) = NaN;
+    g   = sig-f1;
     H   = zeros([d(1:3) d(4)*(d(4)+1)/2],'single');
     for l1 = 1:d(4)
-        H(:,:,:,l1) = rho.*(sig(:,:,:,l1) - sig(:,:,:,l1).^2 + 1e-3*d(4)^2);
+        H(:,:,:,l1) = sig(:,:,:,l1) - sig(:,:,:,l1).^2 + 1e-3*d(4)^2;
     end
     l = d(4);
     for l1 = 1:d(4)
         for l2 = (l1+1):d(4)
             l          = l + 1;
-            H(:,:,:,l) = -rho.*sig(:,:,:,l1).*sig(:,:,:,l2);
+            H(:,:,:,l) = -sig(:,:,:,l1).*sig(:,:,:,l2);
         end
     end
     g   = noise.nu_factor*g;
@@ -76,6 +90,6 @@ otherwise
     error('Unknown likelihood function.');
 end
 
-g(~isfinite(g)) = 0;
-H(~isfinite(H)) = 0;
+g = Push(g,iphi);
+H = Push(H,iphi);
 

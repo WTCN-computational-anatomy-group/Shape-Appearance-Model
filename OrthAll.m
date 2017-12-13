@@ -43,7 +43,7 @@ WW            = zeros(K);
 WW(inda,inda) = WW(inda,inda) + WWa;
 WW(indv,indv) = WW(indv,indv) + WWv;
 
-[T,iT,A] = OrthogonalisationMat(ss.ZZ,ss.sS,WW,ss.N,s);
+[T,iT] = OrthogonalisationMat(ss.ZZ,ss.sS,WW,ss.N,s);
 
 if linked
     iTa = iT;

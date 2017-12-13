@@ -19,7 +19,9 @@ switch lower(code)
 case {'init','set'}
     data = varargin{1};
     save(fullname,'data')
+    pause(0.1);
 case {'get'}
+    pause(0.1);
     load(fullname,'data');
     varargout{1} = data;
 otherwise

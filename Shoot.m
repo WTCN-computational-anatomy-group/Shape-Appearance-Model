@@ -79,6 +79,7 @@ if ~isfinite(N),
     N = double(floor(sqrt(max(max(max(v0(:,:,:,1).^2+v0(:,:,:,2).^2+v0(:,:,:,3).^2)))))+1);
 end
 
+spm_field('boundary',0);
 F     = spm_shoot_greens('kernel',d,prm); % Could save time if this went outside
 vt    = v0;
 mt    = spm_diffeo('vel2mom',vt,prm); % Initial momentum (m_0 = L v_0)

@@ -1,14 +1,12 @@
 function nll = ComputeOF(dat,mu,Wa,Wv,noise,s)
 % Compute part of objective function
-% FORMAT nll = ComputeOF(dat,mu,Wa,Wv,noise,s,EA,WW)
+% FORMAT nll = ComputeOF(dat,mu,Wa,Wv,noise,s)
 % dat   - 
 % mu    - 
 % Wa    - 
 % Wv    - 
 % noise - 
 % s     - 
-% EA    - 
-% WW    - 
 % nll   - 
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
@@ -29,7 +27,7 @@ for n1=1:batchsize:numel(dat)
 
     parfor n=1:numel(nn)
         iphi = GetIPhi(cell1{n},s);
-        nll  = nll - ComputeLL(GetDat(dat1(n),s),iphi,cell2{n},s,noise);
+        nll  = nll - AppearanceDerivs(GetDat(dat1(n),s),cell2{n},iphi,noise,s);
     end
 end
 

@@ -1,4 +1,4 @@
-function [mu,noise] = PGinit(s0,s1,s2,s)
+function [mu,noise] = ComputeMean(s0,s1,s2,s)
 % Compute initial mean (and variance) from sufficient statistics
 % FORMAT [mu,noise] = PGinit(s0,s1,s2,s)
 %
@@ -30,10 +30,12 @@ for it=1:8
 
     switch lower(s.likelihood)
     case {'normal','gaussian','laplace'}
+        alpha0 = 0.0001; if isfield(s,'alpha0'), alpha0 = s.alpha0; end
+        beta0  = 0.0001; if isfield(s,'beta0' ), beta0  = s.beta0;  end
         gmu   = bsxfun(@times,s0,mu) - s1;
         hmu   = s0;
-        noise.beta  = s.beta0  + reshape(sum(sum(sum(max(s2-bsxfun(@rdivide,s1.^2,s0),0),1),2),3),size(s.beta0));
-        noise.alpha = s.alpha0 + sum(sum(sum(s0,1),2),3);
+        noise.beta  = beta0  + reshape(sum(sum(sum(max(s2-bsxfun(@rdivide,s1.^2,s0),0),1),2),3),[1 size(s1,4)]);
+        noise.alpha = alpha0 + sum(sum(sum(s0,1),2),3);
         noise.lam   = double(noise.alpha./noise.beta);
         for l=1:d(4)
             gmul          = gmu(:,:,:,l) + spm_field('vel2mom', mu(:,:,:,l), [s.vx N*s.mu_settings/noise.lam(l)]);
@@ -53,7 +55,7 @@ for it=1:8
         gmu    = bsxfun(@times,s0,sig) - s1;
         Hmu    = zeros([d(1:3) d(4)*(d(4)+1)/2],'single');
         for l = 1:d(4)
-            Hmu(:,:,:,l) = s0.*(sig(:,:,:,l) - sig(:,:,:,l).^2 + 1e-3);
+            Hmu(:,:,:,l) = s0.*(sig(:,:,:,l) - sig(:,:,:,l).^2 + 1e-3*d(4)^2);
         end
         l = d(4);
         for l1 = 1:d(4)

@@ -42,7 +42,7 @@ end
 %t_settings.verbose = true;
 
 % Run the fitting
-[dat,~] = UpdateAllZ(dat,res.mu,res.Wa,res.Wv,res.noise,res.RegZ,t_settings);
+[dat,~] = UpdateZall(dat,res.mu,res.Wa,res.Wv,res.noise,res.RegZ,t_settings);
 
 % Save the latent variable expectations
 Z  = cat(2,dat.z);
@@ -65,6 +65,6 @@ disp(' "input":[["rc1SCAN01.nii","rc2SCAN01.nii"],');
 disp('          ["rc1SCAN02.nii","rc2SCAN02.nii"],');
 disp('          ["rc1SCAN03.nii","rc2SCAN03.nii"],');
 disp('                  :                :        ');
-disp('          ["rc1SCANXX.nii","rc2SCANXX.nii"]]}');
+disp('          ["rc1SCANXX.nii","rc2SCANXX.nii"]]');
 disp(' ');
 

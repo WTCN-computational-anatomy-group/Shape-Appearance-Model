@@ -13,6 +13,7 @@ function pic = ColourPic(a,likelihood)
 d   = [size(a) 1 1];
 s   = round((d(3)+1)/2);
 if d(3)==121, s = 50; end
+if d(3)==91,  s = 37; end
 pic = a(:,:,s,:);
 if nargin<2, likelihood = 'normal'; end
 switch lower(likelihood)
