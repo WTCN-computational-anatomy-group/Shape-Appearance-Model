@@ -21,8 +21,7 @@ else
     d  = [size(a0) 1 1];
     a1 = zeros(d,'single');
     for l=1:d(4)
-        c           = a0(:,:,:,l);
-        a1(:,:,:,l) = spm_diffeo('bsplins',c,iphi,[1 1 1  1 1 1]);
+        a1(:,:,:,l) = spm_diffeo('bsplins',a0(:,:,:,l),iphi,[1 1 1  1 1 1]);
     end
 end
 

@@ -1,11 +1,11 @@
-function [sig,ll] = SoftMax(a0,f1)
+function [sig,ll] = SoftMax(a1,f)
 % Soft-Max likelihoods
-% FORMAT [sig,ll] = SoftMax(a0,f1)
+% FORMAT [sig,ll] = SoftMax(a1,f)
 %
-% a0  - Model parameters
-% f1  - Data
+% a1  - Model parameters
+% f   - Data
 %
-% sig - Softmax of a0
+% sig - Softmax of a1
 % ll  - Log-likelihood
 %
 %__________________________________________________________________________
@@ -15,13 +15,13 @@ function [sig,ll] = SoftMax(a0,f1)
 % $Id$
 
 ll  = 0;
-mxa = max(a0,[],4);
-a0  = bsxfun(@minus,a0,mxa);
-sig = exp(a0);
+mxa = max(a1,[],4);
+a1  = bsxfun(@minus,a1,mxa);
+sig = exp(a1);
 s   = sum(sig,4);
+
 if nargin>=2 && nargout>=2
-    f1(~isfinite(f1)) = 0;
-    ll = sum(sum(sum(sum(f1.*a0,4)-log(s).*sum(f1,4), 3),2),1);
+    f(~isfinite(f)) = 0;
+    ll = sum(sum(sum(sum(f.*a1,4)-log(s).*sum(f,4), 3),2),1);
 end
 sig = bsxfun(@rdivide,sig,s);
-

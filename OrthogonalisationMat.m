@@ -19,7 +19,7 @@ function [T,iT,A] = OrthogonalisationMat(ZZ,S,WW,N,s)
 Ka = s.Ka;
 Kv = s.Kv;
 K  = size(ZZ,1);
-if Ka<=K || Kv<=K,
+if Ka==K && Kv==K,
     ind   = {1:K};
 else
     ind  = {1:Ka,(1:Kv)+Ka};
@@ -34,6 +34,8 @@ end
 ZZ1  = T*ZZ*T';
 EZZ1 = T*(ZZ+S)*T';
 WW1  = iT'*WW*iT;
+WW1  = BlockDiagPart(WW1,ind);
+
 q    = zeros(K,1)-0.5*log(N);
 %q   = -log(N./diag(WW1))/2;
 q    = min(max(q,-10),10);
@@ -63,7 +65,7 @@ for iter=1:100
 
         oE = E;
         E  = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1/(Q*Q)));
-        %fprintf('%d %g %g %g\n', iter, 0.5*trace(Q*ZZ1*Q*A), 0.5*trace(WW1*inv(Q*Q)), E)
+       %fprintf('%d %g %g %g\n', iter, 0.5*trace(Q*ZZ1*Q*A), 0.5*trace(WW1*inv(Q*Q)), E)
         if (oE-E)/E < 1e-8, break; end
     end
     if abs(oE0-E)/E < 1e-7, break; end
@@ -71,8 +73,18 @@ end
 T  = Q*T;
 iT = iT/Q;
 
+%==========================================================================
+%
+%==========================================================================
+function A1 = BlockDiagPart(A0,ind)
+A1  = zeros(size(A0));
+for i=1:numel(ind)
+    A1(ind{i},ind{i}) = A0(ind{i},ind{i});
+end
 
-
+%==========================================================================
+%
+%==========================================================================
 function [T,iT] = OrthogonalisationMatrix(ZZ,WW)
 % Use SVD to orthognalise
 % FORMAT [T,iT] = OrthogonalisationMatrix(ZZ,WW)

@@ -63,6 +63,9 @@ if isfield(s,'ls1'), ls1 = s.ls1; end
 wt       = s.wt;
 itscales = logspace(log10(ls1),log10(1),maxit);
 
+subplot(2,2,1); image(ColourPic(mu,s.likelihood)); axis image ij off;
+drawnow
+
 for iter = 1:maxit,
     fprintf('%-3d    ', iter);
 
@@ -93,7 +96,7 @@ for iter = 1:maxit,
    drawnow
 
     lb = lb_L + lb_pW + lb_pmu + lb_A + lb_lam;
-    fprintf('%9.6g     %8.6g %8.6g %8.6g %8.6g      %8.6g  %g ', -(ss.L(1)+lb_pW), lb_L,  lb_pW,  lb_pmu,  lb_A, lb, s.omega);
+    fprintf('%9.6g     %9.6g %9.6g %9.6g %9.6g      %9.6g  %g ', -(ss.L(1)+lb_pW), lb_L,  lb_pW,  lb_pmu,  lb_A, lb, s.omega);
 
     s.wt(2) = wt(2)*itscales(iter);
     WWa     = UpdateWWa(Wa,s);

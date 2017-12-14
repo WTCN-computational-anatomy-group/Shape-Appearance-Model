@@ -30,10 +30,10 @@ Ka            = d(5);
 Kv            = dv(5);
 K             = size(ss.ZZ,1);
 if Ka<K || Kv<K,
-    Koff = Ka;
+    Koff   = Ka;
     linked = false;
 else
-    Koff = 0;
+    Koff   = 0;
     linked = true;
 end
 inda  = 1:Ka;
@@ -58,7 +58,7 @@ for i=1:size(Wa,3)
 end
 WWa = iTa'*WWa*iTa;
 for i=1:size(Wv,3)
-    Wv(:,:,i,:,:) = reshape(reshape(Wv(:,:,i,:,:),[prod(d(1:2))*3 numel(indv)])*iTv,[d(1:2) 1 3 numel(indv)]);
+    Wv(:,:,i,:,:) = reshape(reshape(Wv(:,:,i,:,:),[prod(d(1:2))*3   numel(indv)])*iTv,[d(1:2) 1   3  numel(indv)]);
 end
 WWv           = iTv'*WWv*iTv;
 WW            = zeros(K);

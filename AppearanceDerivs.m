@@ -66,8 +66,7 @@ case {'multinomial','categorical'}
     % one in spm12/toolbox/Shoot/spm_shoot_blur.m , which works with the subspace
     % null(ones(1,d(4))).  This approach may also increase stability as the Hessian
     % of the likelihood would not be singular.
-
-    [sig,ll] = SoftMax(a1);
+    [sig,ll] = SoftMax(a1,f);
     ll       = noise.nu_factor*ll;
     if nargin<=1, return; end
 
