@@ -5,12 +5,14 @@ function iphi = GetIPhi(varargin)
 % z    - Latent variables
 % Wv   - Shape basis functions
 % s    - Settings. Uses s.vx, s.v_settings & s.int_args.
+%
 % iphi - The resulting diffeomorphism
 %
 % FORMAT iphi = GetIPhi(v0,s)
 %
 % v0   - Initial velocity
 % s    - Settings. Uses s.vx, s.v_settings & s.int_args.
+%
 % iphi - The resulting diffeomorphism
 %
 %__________________________________________________________________________

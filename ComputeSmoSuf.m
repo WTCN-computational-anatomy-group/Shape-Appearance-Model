@@ -26,7 +26,7 @@ d   = d(1:4);
 s1  = zeros(1,d(4));
 
 switch lower(s.likelihood)
-case {'normal','gaussian','laplace'}
+case {'normal','gaussian'}
     res    = f-a1;
     for l=1:d(4)
         tmp   = res(:,:,:,l);

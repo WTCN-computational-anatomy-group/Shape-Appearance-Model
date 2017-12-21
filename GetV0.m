@@ -1,9 +1,10 @@
 function v0 = GetV0(z,Wv)
-% Compute a diffeomorphism from shape basis functions
-% FORMAT iphi = GetIPhi(z,Wv)
+% Compute velocity field(s) from shape basis functions
+% FORMAT v0 = GetV0(z,Wv)
 %
 % z  - Latent variables
 % Wv - Shape basis functions
+%
 % v0 - The resulting velocity field
 %
 %__________________________________________________________________________

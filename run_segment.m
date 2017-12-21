@@ -1,4 +1,6 @@
 function run_segment
+% Segment a bunch of images to generate "imported" versions.
+% This is a very preliminary version of a script for doing this.
 
 images=spm_select(Inf,'nifti');
 
@@ -21,7 +23,6 @@ obj.affreg   = 'mni';
 obj.reg      = [0 0.001 0.5 0.05 0.2]*0.1;
 obj.fwhm     = 1;
 obj.samp     = 3;
-obj.lkp      = [1 1 2 2 3 3 4 4 5 5 5 6 6];
 obj.biasreg  = 0.001*(1/5);
 obj.biasfwhm = 60;
 
@@ -54,6 +55,7 @@ if ll1>ll2, obj.Affine  = Affine1; else obj.Affine  = Affine2; end
 obj.Affine     = spm_maff8(obj.image(1),obj.samp*2,(obj.fwhm+1)*16,obj.tpm, obj.Affine, obj.affreg); % Closer to rigid
 obj.Affine     = spm_maff8(obj.image(1),obj.samp*2, obj.fwhm,      obj.tpm, obj.Affine, obj.affreg);
 
+% Run the actual segmentation
 res = spm_preproc8(obj);
 
 % Final iteration, so write out the required data.

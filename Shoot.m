@@ -1,20 +1,21 @@
-function varargout = Shoot(v0,prm,args)
+function varargout = Shoot(v0,settings,args)
 % Geodesic shooting
-% FORMAT phi = spm_shoot3di(v0,prm,args)
-% v0     - Initial velocity field n1*n2*n3*3 (single prec. float)xi
-% prm  - 8 settings
-%        - [1][2][3] Voxel sizes
-%        - [4][5][6][7][8] Regularisation settings.
-%          Regularisation uses the sum of
-%          - [4] - absolute displacements
-%          - [5] - laplacian
-%          - [6] - bending energy
-%          - [7] - linear elasticity mu
-%          - [8] - linear elasticity lambda
-% args   - Integration parameters
-%          - [1] Num time steps
+% FORMAT theta = Shoot(v0,settings,args)
 %
-% theta  - Inverse deformation field n1*n2*n3*3 (single prec. float)
+% v0       - Initial velocity field n1*n2*n3*3 (single prec. float)xi
+% settings - 8 settings
+%            - [1][2][3] Voxel sizes
+%            - [4][5][6][7][8] Regularisation settings.
+%            Regularisation uses the sum of
+%            - [4] - absolute displacements
+%            - [5] - laplacian
+%            - [6] - bending energy
+%            - [7] - linear elasticity mu
+%            - [8] - linear elasticity lambda
+% args     - Integration parameters
+%            - [1] Num time steps
+%
+% theta    - Inverse deformation field n1*n2*n3*3 (single prec. float)
 %
 % This code generates inverse deformations from
 % initial velocity fields by gedesic shooting.  See the work of Miller,
@@ -79,10 +80,10 @@ if ~isfinite(N),
     N = double(floor(sqrt(max(max(max(v0(:,:,:,1).^2+v0(:,:,:,2).^2+v0(:,:,:,3).^2)))))+1);
 end
 
-spm_field('boundary',0);
-F     = spm_shoot_greens('kernel',d,prm); % Could save time if this went outside
+spm_diffeo('boundary',0);
+F     = spm_shoot_greens('kernel',d,settings); % Could save time if this went outside
 vt    = v0;
-mt    = spm_diffeo('vel2mom',vt,prm); % Initial momentum (m_0 = L v_0)
+mt    = spm_diffeo('vel2mom',vt,settings); % Initial momentum (m_0 = L v_0)
 theta = id - vt/N;
 
 for t=2:abs(N)
@@ -93,7 +94,7 @@ for t=2:abs(N)
     mt1(:,:,:,3) = Jdp(:,:,:,1,3).*mt(:,:,:,1) + Jdp(:,:,:,2,3).*mt(:,:,:,2) + Jdp(:,:,:,3,3).*mt(:,:,:,3);
     mt           = spm_diffeo('pushc',mt1,id+vt/N);
 
-    vt           = spm_shoot_greens(mt,F,prm);
+    vt           = spm_shoot_greens(mt,F,settings);
     dp           = id - vt/N;
 
     theta(:,:,:,1) = spm_diffeo('bsplins',theta(:,:,:,1)-id(:,:,:,1),dp,[1 1 1  1 1 1]) + dp(:,:,:,1);

@@ -1,13 +1,19 @@
 function nll = ComputeOF(dat,mu,Wa,Wv,noise,s)
-% Compute part of objective function
+% Return the likelihood part of objective function
 % FORMAT nll = ComputeOF(dat,mu,Wa,Wv,noise,s)
-% dat   - 
-% mu    - 
-% Wa    - 
-% Wv    - 
-% noise - 
-% s     - 
-% nll   - 
+%
+% dat   - Structure containing various information about each image.
+%         Fields for each image n are:
+%         dat(n).f - Image data.
+%         dat(n).z - Expectations of latent variables.
+%         dat(n).S - Covariances of latent variables.
+% mu    - Mean basis function
+% Wa    - Appearance basis functions
+% Wv    - Shape basis functions
+% noise - Noise model
+% s     - Settings
+%
+% nll   - Negative log-likelihood
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -29,5 +35,7 @@ for n1=1:batchsize:numel(dat)
         iphi = GetIPhi(cell1{n},s);
         nll  = nll - AppearanceDerivs(GetDat(dat1(n),s),cell2{n},iphi,noise,s);
     end
+if ~isfinite(nll), crash; end
+
 end
 

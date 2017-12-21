@@ -1,4 +1,17 @@
 function WWv = UpdateWWv(Wv,s)
+% Compute WWv from shape basis functions
+% FORMAT WWv = UpdateWWv(Wv,s)
+%
+% Wv  - Shape bases
+% s   - Settings. Uses s.vx and s.v_settings.
+%
+% WWv - Wv'*Lv*Wv.
+%
+%__________________________________________________________________________
+% Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id$
 
 Kv  = size(Wv,5);
 WWv = zeros(Kv);

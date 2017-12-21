@@ -1,5 +1,5 @@
 function [f1,rho] = Push(f,iphi)
-% Push an image accorging to a spatial transform
+% Push an image (or set of images) accorging to a spatial transform
 % FORMAT [f1,rho] = Push(f,iphi)
 %
 % f    - Image (3D or 4D)

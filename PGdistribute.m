@@ -1,7 +1,35 @@
 function varargout = PGdistribute(opt,varargin)
 % Distribute functions among workers
 % FORMAT varargout = PGdistribute(opt,varargin)
-% 
+%
+% opt - A string, which may be one of:
+%       'Init'       - Initialise the system, passing various arguments
+%                      via the s data structure.
+%       'Share'      - Pass data among workers.  This option would be
+%                      removed for the real distributed system as the data
+%                      would be held locally on each worker.
+%       'Collect'    - Collect the data from each worker.  This is another
+%                      option to be removed for the properly distributed
+%                      version, as this data should not leave the sites.
+%       'GetZZ'      - Return sufficient statistics from latent variables.
+%       'TransfZ'    - Matrix pre-multiplication of latent variables.
+%       'AddToZ'     - Addition of vector to latent variables.
+%       'UpdateZall' - Re-estimate all latent variables and return useful
+%                      suffient statistics.
+%       'WvGradHess' - Return derivatives w.r.t. shape basis functions.
+%       'WaGradHess' - Return derivatives w.r.t. appearance basis functions.
+%       'MuGradHess' - Return derivatives w.r.t. appearance basis functions.
+%       'ComputeOF'  - Return the likelihood part of objective function.
+%       'RandomZ'    - Initialise latent variables randomly.
+%       'AddRandZ'   - Add random nouse to latent variables.
+%       'SuffStats'  - Compute sufficient statistics.
+%
+% varargin - See each function for descriptions of arguments.
+%
+% This code is intended to eventually distribute work among many different
+% hospital sites. The idea is that much of the computation can be done
+% using aggregates, such that the actual data from individual patients
+% should not leave the sites. 
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -28,17 +56,19 @@ drawnow
 
 switch lower(opt)
 case {'init'}
+    % Initialise the system, passing various arguments
+    % via the s data structure.
+
     s    = varargin{1};
     name = s.result_name;
     if isfield(s,'par'), par = s.par; end
     if par, p = gcp; NW = p.NumWorkers; else NW = 1; end
 
 case {'share'}
-    % Really, all private data should be on the worker machine
-    % and not available from the host.  I do it this way for
-    % now though. Later on, I'll see about setting up workers
-    % such that they are able to recognise which images to
-    % process.
+    % Pass data among workers.  This option would be
+    % removed for the real distributed system as the data
+    % would be held locally on each worker.
+
     dat = varargin{1};
     N   = numel(dat);
     if par
@@ -53,6 +83,10 @@ case {'share'}
     end
 
 case {'collect'}
+    % Collect the data from each worker.  This is another
+    % option to be removed for the properly distributed
+    % version, as this data should not leave the sites.
+
     dat_cell = cell(1,NW);
     if par
         parfor nw=1:NW
@@ -109,7 +143,7 @@ case {'addtoz'}
         PGworker('AddToZ', name, 1,zs);
     end
 
-case {'updatez'}
+case {'updatezall'}
     mu     = varargin{1};
     Wa     = varargin{2};
     Wv     = varargin{3};
@@ -136,7 +170,7 @@ case {'updatez'}
         end
 
         parfor nw=1:NW
-            st  = PGworker('UpdateZ',name, nw,mu,Wa,Wv,noise,A,s);
+            st  = PGworker('UpdateZall',name, nw,mu,Wa,Wv,noise,A,s);
             if ~isempty(st)
                 N      = N  + st.N;
                 L      = L  + st.L;
@@ -163,7 +197,7 @@ case {'updatez'}
             stats.Hmu    = Hmu;
         end
     else
-        stats  = PGworker('UpdateZ',name, 1,mu,Wa,Wv,noise,A,s);
+        stats  = PGworker('UpdateZall',name, 1,mu,Wa,Wv,noise,A,s);
     end
     varargout{1} = stats;
 
@@ -363,7 +397,7 @@ case {'suffstats'}
     varargout{4} = mat;
 
 otherwise
-    error('"%s" unknown.');
+    error('"%s" unknown.', opt);
 end
 
 drawnow

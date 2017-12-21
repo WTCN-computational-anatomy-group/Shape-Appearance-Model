@@ -1,15 +1,19 @@
 function [T,iT,A] = OrthogonalisationMat(ZZ,S,WW,N,s)
 % Orthogonalisation matrix
 % FORMAT [T,iT,A] = OrthogonalisationMat(ZZ,S,WW,N,s)
+%
 % ZZ    - Z*Z', where Z are the latent variables
 % S     - E[Z*Z'] = Z*Z' + S
 % WW    - Wa'*La*Wa + Wv'*Lv*Wv
+% A0    - Precision matrix for distribution of latent variables.
 % N     - size(Z,2)
-% s     - Settings. Passed to SetReg.m
+% s     - Settings.
 %
-% T     - Transform
-% iT    - Inverse transform
-% A     - Returned from SetReg.m
+% T     - Transform.
+% iT    - Inverse transform.
+% A     - Precision matrix for distribution of latent variables.
+%
+% Compute a suitable orthogonalisation matrix (T) and its inverse (iT).
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -34,17 +38,18 @@ end
 ZZ1  = T*ZZ*T';
 EZZ1 = T*(ZZ+S)*T';
 WW1  = iT'*WW*iT;
-WW1  = BlockDiagPart(WW1,ind);
 
 q    = zeros(K,1)-0.5*log(N);
 %q   = -log(N./diag(WW1))/2;
 q    = min(max(q,-10),10);
 Q    = diag(exp(q));
+%A   = iT'*A0*iT;
 A    = SetReg(Q*EZZ1*Q,N,s);
 E    = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1/(Q*Q)));
 %fprintf('\n%d %g %g %g\n', 0, 0.5*trace(Q*ZZ1*Q*A), 0.5*trace(WW1*inv(Q*Q)), E)
 
 for iter=1:100
+   %A   = (iT/Q)'*A0*(iT/Q);
     A   = SetReg(Q*EZZ1*Q,N,s);
     oE0 = E;
 
@@ -58,7 +63,7 @@ for iter=1:100
         H2 = 4*(Q^2\WW1);
         H  = H1+H2;
 
-        H  = H + max(diag(H))*1e-8*eye(size(H));
+        H  = H + max(diag(H))*1e-6*eye(size(H));
         q  = q - H\g;
         q  = min(max(q,-10),10);
         Q  = diag(exp(q));
@@ -72,15 +77,6 @@ for iter=1:100
 end
 T  = Q*T;
 iT = iT/Q;
-
-%==========================================================================
-%
-%==========================================================================
-function A1 = BlockDiagPart(A0,ind)
-A1  = zeros(size(A0));
-for i=1:numel(ind)
-    A1(ind{i},ind{i}) = A0(ind{i},ind{i});
-end
 
 %==========================================================================
 %
@@ -111,8 +107,8 @@ end
 Dz       = diag(sqrt(diag(Dz2)+eps));
 Dw       = diag(sqrt(diag(Dw2)+eps));
 [U,D,V]  = svd(Dw*Vw'*Vz*Dz');
-Dz       = Dz+max(abs(Dz(:)))*1e-9*eye(size(Dz));
-Dw       = Dw+max(abs(Dw(:)))*1e-9*eye(size(Dw));
+Dz       = Dz+max(abs(Dz(:)))*1e-8*eye(size(Dz));
+Dw       = Dw+max(abs(Dw(:)))*1e-8*eye(size(Dw));
 T        = D*V'*(Dz\Vz');
 iT       = Vw*(Dw\U);
 

@@ -1,10 +1,17 @@
-function dat = TransfZ(dat,Rz)
-% Matrix multiplication of latent variables
-% FORMAT dat = TransfZ(dat,Rz)
+function dat = TransfZ(dat,T)
+% Matrix pre-multiplication of latent variables
+% FORMAT dat = TransfZ(dat,T)
 %
-% dat - data (with fields dat(n).z & dat(n).S)
-% Rz  - Transpose of matrix to multiply z by
+% dat - Structure containing various information about each image.
+%       Fields for each image n are:
+%       dat(n).f - Image data.
+%       dat(n).z - Expectations of latent variables.
+%       dat(n).S - Covariances of latent variables.
+% T   - Matrix to multiply z by
 %
+% Does the following for each image:
+%       dat(n).z = T*dat(n).z;
+%       dat(n).S = T*dat(n).S*T';
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -13,9 +20,9 @@ function dat = TransfZ(dat,Rz)
 
 N = numel(dat);
 for n=1:N
-    dat(n).z = Rz'*dat(n).z;
+    dat(n).z = T*dat(n).z;
     if isfield(dat,'S')
-        dat(n).S = Rz'*dat(n).S*Rz;
+        dat(n).S = T*dat(n).S*T';
     end
 end
 

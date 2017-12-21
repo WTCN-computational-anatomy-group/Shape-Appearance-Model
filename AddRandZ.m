@@ -2,7 +2,11 @@ function dat = AddRandZ(dat,Sig)
 % Add random nouse to latent variables
 % FORMAT dat = AddRandZ(dat,Sig)
 %
-% dat - Data structure
+% dat - Structure containing various information about each image.
+%       Fields for each image n are:
+%       dat(n).f - Image data.
+%       dat(n).z - Expectations of latent variables.
+%       dat(n).S - Covariances of latent variables.
 % Sig - Noise covariance
 %
 %__________________________________________________________________________

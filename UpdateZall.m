@@ -1,8 +1,12 @@
 function [dat,stats] = UpdateZall(dat,mu,Wa,Wv,noise,A,s)
-% Re-estimate all latent variables and compute useful suffient statistics
+% Re-estimate all latent variables and return useful suffient statistics
 % FORMAT [dat,stats] = UpdateZall(dat,mu,Wa,Wv,noise,A,s)
 %
-% dat   - Data
+% dat   - Structure containing various information about each image.
+%         Fields for each image n are:
+%         dat(n).f - Image data.
+%         dat(n).z - Expectations of latent variables.
+%         dat(n).S - Covariances of latent variables.
 % mu    - Mean image
 % Wa    - Appearance basis functions
 % Wv    - Shape basis functions

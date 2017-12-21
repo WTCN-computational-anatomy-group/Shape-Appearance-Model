@@ -1,11 +1,17 @@
 function varargout = GetZZ(dat)
-% Compute Z Z^T
+% Return suffient statistics from latent variables
 % FORMAT [N,Z,ZZ,S] = GetZZ(dat)
 %
-% dat - 
-% N   - 
-% ZZ  - 
-% S   -
+% dat - Structure containing various information about each image.
+%       Fields for each image n are:
+%       dat(n).f - Image data.
+%       dat(n).z - Expectations of latent variables.
+%       dat(n).S - Covariances of latent variables.
+%
+% N   - Number of images.
+% Z   - Sum over expectations of latent variables (dat(n).z).
+% ZZ  - Sum over dat(n).z*dat(n).z'
+% S   - Sum over covariances (dat(n).S)
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging

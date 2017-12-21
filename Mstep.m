@@ -1,21 +1,28 @@
 function [Wa,Wv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
 % Update the basis functions
 % FORMAT  [Wa,Wv,WW,omega] = Mstep(mu,Wa,Wv,noise,B,ZZ,A,WWa,WWv,s)
-% mu    - Mean
-% Wa    - Appearance basis functions
-% Wv    - Shape basis functions
-% noise - Noise information
-% B     - Precision matrix for W (sort of)
-% ZZ    - Z*Z' sufficient statistic
-% A     - Expectation of precision matrix for Z
-% WWa   - Wa'*La*Wa
-% WWv   - Wv'*Lv*Wv
-% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir & s.result_name
 %
-% Wa    - Appearance basis functions
-% Wv    - Shape basis functions
-% WW    - Combined WWa and WWv
+% mu    - Mean.
+% Wa    - Appearance basis functions.
+% Wv    - Shape basis functions.
+% noise - Noise information.
+% B     - Precision matrix for W (sort of).
+% ZZ    - Z*Z' sufficient statistic.
+% A     - Expectation of precision matrix for Z.
+% WWa   - Wa'*La*Wa.
+% WWv   - Wv'*Lv*Wv.
+% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir and
+%         s.result_name.
+%
+% Wa    - Appearance basis functions.
+% Wv    - Shape basis functions.
+% WW    - Combined WWa and WWv.
 % omega - step size for Gauss-Newton update of Wv
+%
+% Updates Wa and Wv via Gauss-Newton updates.  This normally involves two
+% passes through the data, although more may be required if the Gauss-
+% Newton updates of the shape bases functions (Wv) overshoot.  A new WW is
+% also computed.  
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -56,7 +63,7 @@ if numel(indv)>0
 
         nll0        = nll+0.5*s.wt(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.wt(2)*trace(WW*ZZ);
         %fprintf(' [%g %g %g %g] ', nll, 0.5*s.wt(1)*trace(WW*B), 0.5*s.wt(1)*trace(A*ZZ), 0.5*s.wt(2)*trace(WW*ZZ));
-        fprintf('%9.6g ', nll0);
+        fprintf('%9.6g ', -nll0);
 
         for subit=1:8
             Wv            = UpdateWv(Wv,gv,Hv,RegW(indv,indv),s);
@@ -75,7 +82,7 @@ if numel(indv)>0
 
             nll              = nll1 + 0.5*s.wt(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.wt(2)*trace(WW*ZZ);
 
-            if ~isfinite(nll), error('Something went wrong.'); end
+           %if ~isfinite(nll), error('Something went wrong.'); end
             if nll<max(nll0*0.999999,nll0*1.000001)
                 s.omega = min(s.omega*1.1,1);
                 break;
@@ -87,7 +94,7 @@ if numel(indv)>0
                 WWv   = prev.WWv;
             end
         end
-        fprintf('%9.6g ', nll);
+        fprintf('%9.6g ', -nll);
     end
 else
     if numel(inda)>0

@@ -7,7 +7,7 @@ function [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
 % iphi  - Deformation
 % noise - noise precision (for Gaussian noise only)
 % s     - settings
-% s.likelihood - either 'normal', 'laplace', 'binomial' or 'multinomial'.
+% s.likelihood - either 'normal', 'binomial' or 'multinomial'.
 %
 % ll  - log-likelihood
 % g   - Voxel-wise 1st derivatives 
@@ -26,21 +26,21 @@ function [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
 
 d   = [size(a0) 1 1 1];
 d   = d(1:4);
-msk = isfinite(f);
 a1  = Pull(a0,iphi);
+msk = isfinite(f) & isfinite(a1);
 
 switch lower(s.likelihood)
 case {'normal','gaussian'}
     % The L2 norm works reasonably well, but future versions should probably make use
     % of non-stationary variances.
     lam = reshape(noise.lam,[1,1,1,d(4)]);
-    D   = sum(msk(:));
     ll  = 0;
     for l=1:d(4)
-        a1l = a1(:,:,:,l);
-        fl  = f(:,:,:,l);
+        a1l  = a1(:,:,:,l);
+        fl   = f(:,:,:,l);
         mskl = msk(:,:,:,l);
-        ll  = ll + noise.nu_factor*0.5*(D*(log(noise.lam(l)) - log(2*pi)) - noise.lam(l)*sum(sum(sum((fl(mskl)-a1l(mskl)).^2))));
+        D    = sum(mskl(:));
+        ll   = ll + noise.nu_factor*0.5*(D*(log(noise.lam(l)) - log(2*pi)) - noise.lam(l)*sum(sum(sum((fl(mskl)-a1l(mskl)).^2))));
     end
     if nargin<=1, return; end
 

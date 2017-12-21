@@ -1,5 +1,5 @@
 function a1 = Pull(a0,iphi)
-% resample an image
+% Resample an image or set of images
 % FORMAT a1 = Pull(a0,iphi)
 %
 % a0      - Input image(s)

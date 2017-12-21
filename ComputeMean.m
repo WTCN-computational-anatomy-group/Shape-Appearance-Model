@@ -2,14 +2,16 @@ function [mu,noise] = ComputeMean(s0,s1,s2,s)
 % Compute initial mean (and variance) from sufficient statistics
 % FORMAT [mu,noise] = PGinit(s0,s1,s2,s)
 %
-% s0  - Zeroeth moment (number of observations)
-% s1  - First moment   (sum over observations)
-% s2  - Second moment  (sum of squares of observations)
-% s   - Settings. Uses s.likelihood, s.vx, s.mu_settings, s.mg_its (and maybe s.alpha0, s.beta0)
+% s0    - Zeroeth moment (number of observations)
+% s1    - First moment   (sum over observations)
+% s2    - Second moment  (sum of squares of observations)
+% s     - Settings. Uses s.likelihood, s.vx, s.mu_settings, s.mg_its (and
+%         maybe s.alpha0, s.beta0)
 %
-% mu  - mean
-% noise - an assortment of stuff used when s.likelihood = 'normal' or s.likelihood = 'laplace'.
+% mu    - mean
+% noise - an assortment of stuff used when s.likelihood = 'normal'.
 %
+% This function is used as part of initialising the model fitting
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
@@ -26,10 +28,12 @@ N      = double(nanmax(s0(:)));
 noise.nu_factor = 1;
 if isfield(s,'nu_factor'), noise.nu_factor = s.nu_factor; end
 
+spm_field('boundary',0);
+
 for it=1:8
 
     switch lower(s.likelihood)
-    case {'normal','gaussian','laplace'}
+    case {'normal','gaussian'}
         alpha0 = 0.0001; if isfield(s,'alpha0'), alpha0 = s.alpha0; end
         beta0  = 0.0001; if isfield(s,'beta0' ), beta0  = s.beta0;  end
         gmu   = bsxfun(@times,s0,mu) - s1;
@@ -38,8 +42,8 @@ for it=1:8
         noise.alpha = alpha0 + sum(sum(sum(s0,1),2),3);
         noise.lam   = double(noise.alpha./noise.beta);
         for l=1:d(4)
-            gmul          = gmu(:,:,:,l) + spm_field('vel2mom', mu(:,:,:,l), [s.vx N*s.mu_settings/noise.lam(l)]);
-            mu(:,:,:,l)   = mu(:,:,:,l)  - spm_field(hmu, gmul,              [s.vx N*s.mu_settings/noise.lam(l) s.mg_its]);
+            gmul          = gmu(:,:,:,l) + spm_field('vel2mom', mu(:,:,:,l), [s.vx N*s.mu_settings/noise.lam(l)/noise.nu_factor]);
+            mu(:,:,:,l)   = mu(:,:,:,l)  - spm_field(hmu, gmul,              [s.vx N*s.mu_settings/noise.lam(l)/noise.nu_factor s.mg_its]);
         end
 
     case {'binomial','binary'}
@@ -47,8 +51,8 @@ for it=1:8
         gmu   = s0.*sig - s1;
         hmu   = s0.*(sig.*(1-sig)+1e-3);
         noise.lam = 1;
-        gmu  = gmu + spm_field('vel2mom', mu, [s.vx N*s.mu_settings]);
-        mu   = mu  - spm_field(hmu, gmu,      [s.vx N*s.mu_settings s.mg_its]);
+        gmu  = gmu + spm_field('vel2mom', mu, [s.vx N*s.mu_settings/noise.nu_factor]);
+        mu   = mu  - spm_field(hmu, gmu,      [s.vx N*s.mu_settings/noise.nu_factor s.mg_its]);
 
     case {'multinomial','categorical'}
         sig    = SoftMax(mu);
@@ -65,8 +69,8 @@ for it=1:8
             end
         end
         noise.lam = 1;
-        gmu  = gmu + spm_field('vel2mom', mu, [s.vx N*s.mu_settings]);
-        mu   = mu  - spm_field(Hmu, gmu,      [s.vx N*s.mu_settings s.mg_its]);
+        gmu  = gmu + spm_field('vel2mom', mu, [s.vx N*s.mu_settings/noise.nu_factor]);
+        mu   = mu  - spm_field(Hmu, gmu,      [s.vx N*s.mu_settings/noise.nu_factor s.mg_its]);
     otherwise
         noise.lam   = 1;
     end

@@ -1,8 +1,14 @@
 function [f,mat] = GetDat(dat,s)
 % Read in the image data
 % FORMAT f = GetDat(dat,s)
-% dat - a data structure that includes image information
+%
+% dat - Structure containing various information about each image.
+%       Fields for each image n are:
+%       dat(n).f - Image data.
+%       dat(n).z - Expectations of latent variables.
+%       dat(n).S - Covariances of latent variables.
 % s   - Settings. Uses s.likelihood.
+%
 % f   - The resulting image
 % mat - Voxel to world mapping
 %__________________________________________________________________________
@@ -54,7 +60,7 @@ case {'nifti','char'}
         d(3)   = numel(slices);
     end
     switch s.likelihood
-    case {'normal','gaussian','laplace'}
+    case {'normal','gaussian'}
     case {'binomial','binary'}
         if d(4)~=1, error('Wrong number of volumes.'); end
     case {'multinomial','categorical'}

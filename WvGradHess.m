@@ -1,16 +1,22 @@
 function [gv,Hv,nll] = WvGradHess(dat,mu,Wa,Wv,noise,s)
-% Compute derivatives w.r.t. shape basis functions
+% Return derivatives w.r.t. shape basis functions
 % FORMAT [gv,Hv,nll] = WaGradHess(dat,mu,Wa,Wv,noise,s)
-% dat   - Array of data
-% mu    - Mean
-% Wa    - Appearance basis functions
-% Wv    - Shape basis functions
-% noise - Noise information
-% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir & s.result_name
 %
-% gv    - Gradients 
-% Hv    - Hessians
-% nll   - Negative log-likelihood
+% dat   - Structure containing various information about each image.
+%         Fields for each image n are:
+%         dat(n).f - Image data.
+%         dat(n).z - Expectations of latent variables.
+%         dat(n).S - Covariances of latent variables.
+% mu    - Mean.
+% Wa    - Appearance basis functions.
+% Wv    - Shape basis functions.
+% noise - Noise information.
+% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir and
+%         s.result_name.
+%
+% gv    - Gradients for updating Wv.
+% Hv    - Hessians for updating Wv.
+% nll   - Negative log-likelihood.
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging

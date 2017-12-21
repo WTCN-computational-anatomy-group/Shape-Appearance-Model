@@ -4,6 +4,7 @@ function sol = MultiGammaLn(nu,K)
 %
 % nu  - Degrees of freedom
 % K   - Dimension
+%
 % sol - Multivariate gamma
 %
 % See https://en.wikipedia.org/wiki/Multivariate_gamma_function

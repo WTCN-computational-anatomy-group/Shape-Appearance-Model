@@ -19,11 +19,13 @@ if isempty(ga)
 end
 if isfield(s,'verbose') && s.verbose == true, verb = true; else verb = false; end
 if verb, fprintf('\nWa: '); end
+
+spm_field('boundary',0);
+
 switch lower(s.likelihood)
-case {'normal','gaussian','laplace','binomial','binary'}
+case {'normal','gaussian','binomial','binary'}
     for k=1:size(ga,5)
         for l=1:size(ga,4)
-            spm_field('boundary',0);
             g             = ga(:,:,:,l,k) + spm_field('vel2mom', Wa(:,:,:,l,k), double([s.vx RegW(k,k)*s.a_settings]));
             da            = spm_field(Ha(:,:,:,l,k), g,                         double([s.vx RegW(k,k)*s.a_settings+[0.01 0.1 0] s.mg_its]));
             Wa(:,:,:,l,k) = Wa(:,:,:,l,k) - s.omega*da;
@@ -37,7 +39,6 @@ case {'multinomial','categorical'}
     % null(ones(1,d(4))).  This approach may also increase stability as the Hessian
     % of the likelihood would not be singular.
     for k=1:size(ga,5)
-        spm_field('boundary',0);
         g             = ga(:,:,:,:,k) + spm_field('vel2mom', Wa(:,:,:,:,k), double([s.vx RegW(k,k)*s.a_settings]));
         da            = spm_field(Ha(:,:,:,:,k), g,                         double([s.vx RegW(k,k)*s.a_settings+[0.01 0.1 0] s.mg_its]));
         tmp           = Wa(:,:,:,:,k) - s.omega*da;

@@ -1,6 +1,7 @@
 function a0 = GetA0(z,Wa,mu)
 % Compute mean plus linear combination of appearance bases
 % FORMAT a0 = GetA0(z,Wa,mu)
+%
 % z  - Latent variables (weights for linear combination)
 % Wa - Appearance basis functions
 % mu - Appearance mean

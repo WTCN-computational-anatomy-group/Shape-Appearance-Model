@@ -12,110 +12,58 @@ function varargout = PGworker(opt,name,nw,varargin)
 % $Id$
 
 data = PrivateData('get',name,nw);
+no   = nargout;
 
 switch lower(opt)
 case {'init'}
 
 case {'getzz'}
-    [N,Z,ZZ,sS]  = GetZZ(data);
-    varargout{1} = N;
-    varargout{2} = Z;
-    varargout{3} = ZZ;
-    varargout{4} = sS;
+    [varargout{1:no}] = GetZZ(data);
 
 case {'transfz'}
-    Rz     = varargin{1};
-    data   = TransfZ(data,Rz);
+    data = TransfZ(data,varargin{:});
     PrivateData('set',name,nw,data);
 
 case {'addtoz'}
-    zs     = varargin{1};
-    data   = AddToZ(data,zs);
+    data = AddToZ(data,varargin{:});
     PrivateData('set',name,nw,data);
 
-case {'updatez'}
-    mu     = varargin{1};
-    Wa     = varargin{2};
-    Wv     = varargin{3};
-    noise  = varargin{4};
-    A      = varargin{5};
-    s      = varargin{6};
-    [data,stats] = UpdateZall(data,mu,Wa,Wv,noise,A,s);
-    varargout{1} = stats;
+case {'updatezall'}
+    [data,varargout{1:no}] = UpdateZall(data,varargin{:});
     PrivateData('set',name,nw,data);
 
 case {'wvgradhess'}
-    mu     = varargin{1};
-    Wa     = varargin{2};
-    Wv     = varargin{3};
-    noise  = varargin{4};
-    s      = varargin{5};
-    s.result_name = [s.result_name '_' num2str(nw)];
-    [gv,Hv,nll]  = WvGradHess(data,mu,Wa,Wv,noise,s);
-    varargout{1} = gv;
-    varargout{2} = Hv;
-    varargout{3} = nll;
+    s                 = varargin{5};
+    s.result_name     = [s.result_name '_' num2str(nw)];
+    [varargout{1:no}] = WvGradHess(data,varargin{1:4},s);
 
 case {'wagradhess'}
-    mu     = varargin{1};
-    Wa     = varargin{2};
-    Wv     = varargin{3};
-    noise  = varargin{4};
-    s      = varargin{5};
-    s.result_name = [s.result_name '_' num2str(nw)];
-    [ga,Ha,nll]  = WaGradHess(data,mu,Wa,Wv,noise,s);
-    varargout{1} = ga;
-    varargout{2} = Ha;
-    varargout{3} = nll;
+    s                 = varargin{5};
+    s.result_name     = [s.result_name '_' num2str(nw)];
+    [varargout{1:no}] = WaGradHess(data,varargin{1:4},s);
 
 case {'mugradhess'}
-    mu     = varargin{1};
-    Wa     = varargin{2};
-    Wv     = varargin{3};
-    noise  = varargin{4};
-    s      = varargin{5};
-    [gmu,Hmu,nll] = muGradHess(data,mu,Wa,Wv,noise,s);
-    varargout{1} = gmu;
-    varargout{2} = Hmu;
-    varargout{3} = nll;
+    [varargout{1:no}] = muGradHess(data,varargin{:});
 
 case {'computeof'}
-    mu     = varargin{1};
-    Wa     = varargin{2};
-    Wv     = varargin{3};
-    noise  = varargin{4};
-    s      = varargin{5};
-    nll    = ComputeOF(data,mu,Wa,Wv,noise,s);
-    varargout{1} = nll;
+    [varargout{1:no}] = ComputeOF(data,varargin{:});
 
 case {'randomz'}
-    K      = varargin{1};
-    data   = RandomZ(data,K);
+    data = RandomZ(data,varargin{:});
     PrivateData('set',name,nw,data);
 
 case {'addrandz'}
-    Sig    = varargin{1};
-    data   = AddRandZ(data,Sig);
+    data = AddRandZ(data,varargin{:});
     PrivateData('set',name,nw,data);
 
 case {'suffstats'}
-    [s0,s1,s2,mat]  = SuffStats(data,varargin{:});
-    varargout{1} = s0;
-    varargout{2} = s1;
-    varargout{3} = s2;
-    varargout{4} = mat;
+    [varargout{1:no}] = SuffStats(data,varargin{:});
 
 case {'collect'}
     % This would be done differently within a privacy-preserving setting
     % with this facility disabled.
-    varargout{1} = data;
-case {'save'}
-
+    varargout{1}    = data;
 otherwise
     error('"%s" unknown.');
 end
 
-
-%==========================================================================
-
-%==========================================================================

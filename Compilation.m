@@ -1,3 +1,9 @@
+% Script for compiling the MATLAB code for the Shape & Appearance models.
+%__________________________________________________________________________
+% Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id$
 
 compile_dir = fullfile(tempdir,'compiled');
 

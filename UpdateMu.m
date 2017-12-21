@@ -18,8 +18,10 @@ function [mu,lb_pmu] = UpdateMu(mu,gmu,Hmu,N,s)
 d = [size(mu) 1 1];
 d = d(1:4);
 
+spm_field('boundary',0);
+
 switch lower(s.likelihood)
-case {'normal','gaussian','laplace','binomial','binary'}
+case {'normal','gaussian','binomial','binary'}
     a0 = zeros(d,'single');
     for l=1:d(4)
         gr          = gmu(:,:,:,l) + spm_field('vel2mom', mu(:,:,:,l), [s.vx N*s.mu_settings]);

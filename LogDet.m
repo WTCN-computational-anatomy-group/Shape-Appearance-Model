@@ -3,9 +3,11 @@ function ld = LogDet(A)
 % FORMAT ld = LogDet(A)
 %
 % A  - A square matrix
+%
 % ld - Logarithm of determinant of A
 %
-% Cholesky factorisation is used to compute a more stable log-determinant.
+% Cholesky factorisation is used to compute a more stable log-determinant,
+% which avoids over or underflow.
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging

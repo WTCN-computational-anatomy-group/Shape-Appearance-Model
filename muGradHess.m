@@ -1,12 +1,17 @@
 function [gmu,Hmu,nll] = muGradHess(dat,mu,Wa,Wv,noise,s)
-% Compute derivatives w.r.t. appearance basis functions
+% Return derivatives w.r.t. appearance basis functions
 % FORMAT [nll,gmu,Hmu] = WaGradHess(dat,mu,Wa,Wv,noise,s)
-% dat   - Array of data
+%
+% dat   - Structure containing various information about each image.
+%         Fields for each image n are:
+%         dat(n).f - Image data.
+%         dat(n).z - Expectations of latent variables.
+%         dat(n).S - Covariances of latent variables.
 % mu    - Mean
 % Wa    - Appearance basis functions
 % Wv    - Shape basis functions
 % noise - Noise information
-% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir & s.result_name
+% s     - Settings. Uses s.likelihood and s.batchsize.
 %
 % gmu   - Gradients
 % Hmu   - Hessians
@@ -24,10 +29,8 @@ d  = [size(mu), 1,1];
 d  = d(1:4);
 
 switch lower(s.likelihood)
-case {'normal','laplace'}
+case {'normal','gaussian','binomial','binary'}
     d4 = d(4);
-case {'binomial','binary'}
-    d4 = 1;
 case {'multinomial','categorical'}
     d4 = d(4)*(d(4)+1)/2;
 end
@@ -42,7 +45,6 @@ nll = 0;
 for n1=1:batchsize:numel(dat)
     nn    = n1:min(n1+(batchsize-1),numel(dat));
     z     = {dat(nn).z};
-   %S     = {dat(nn).S};
     cell1 = GetV0(z,Wv);
     cell2 = GetA0(z,Wa,mu);
     dat1  = dat(nn);

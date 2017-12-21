@@ -1,4 +1,17 @@
 function WWa = UpdateWWa(Wa,s)
+% Compute WWa from appearance basis functions
+% FORMAT WWa = UpdateWWa(Wa,s)
+%
+% Wa  - Shape bases
+% s   - Settings. Uses s.vx and s.a_settings.
+%
+% WWa - Wa'*La*Wa.
+%
+%__________________________________________________________________________
+% Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
+
+% John Ashburner
+% $Id$
 
 Ka  = size(Wa,5);
 WWa = zeros(Ka);

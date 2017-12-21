@@ -1,5 +1,5 @@
 function [z,S,L,omisc] = UpdateZpar(z,f,mu,Wa,Wv,A,s,noise)
-% Update latent variables for one observation
+% Update latent variables for all images
 % FORMAT [z,S,L,omisc] = UpdateZpar(z,f,mu,Wa,Wv,A,s,noise)
 %
 % z     - Cell array of latent variables
@@ -28,10 +28,6 @@ a0   = GetA0(z,Wa,mu); % Compute linear combination of appearance modes
 v0   = GetV0(z,Wv);    % Linear combination of shape components
 iphi = GetIPhi(v0,s);
 subj = struct('f',f,'z',z,'a0',a0,'v0',v0,'iphi',iphi,'a',[],'Ha',[],'g',[],'H1',[],'nll',[],'S',[],'dz',[],'da',[],'dv',[],'stop',false);
-
-% Approximate memory requirements per subject: f+f1+a0+da, v0+iphi+dv+rho, B
-% 4*(prod(d)*4 + prod(d(1:3))*(3*3+1))
-% 4*prod(d(1:3))*(d(4)*4 + 3*3+1) + 4*prod(d(1:2))*K
 
 A   = double(A); % Use double
 K   = size(A,1);
@@ -74,8 +70,8 @@ for subit=1:s.nit
             g  = subj(n).g  + double(A*subj(n).z); % Add prior term of gradient
             H  = subj(n).H1 + double(A);           % Add prior term of hessian
 
-           %R  = (max(diag(H))*1e-6)*eye(K);       % Regularisation done in case H is singular
-           %H  = H+R;
+            R  = (max(diag(H))*1e-7)*eye(K);       % Regularisation done in case H is singular
+            H  = H+R;
 
             subj(n).S  = inv(H); % S encodes the uncertainty of the z estimates (Laplace approximation)
             subj(n).dz = H\g;    % Search direction for updating z
@@ -149,7 +145,7 @@ if nargout>=4
         % of the neighbouring voxels.
         % if false % Fix later
         % switch lower(s.likelihood)
-        % case {'normal'}
+        % case {'normal','gaussian'}
         %     % Adjustment for uncertainty in z
         %     s1    = s1 + trace(H\H1)/noise.lam;
         % end
@@ -303,7 +299,7 @@ case {'multinomial','categorical'}
     sig     = SoftMax(a1);
 case {'binomial','binary'}
     sig = 1./(1+exp(-a1));
-otherwise % case {'normal','gaussian','laplace'}
+otherwise % case {'normal','gaussian'}
     sig = a1;
 end
 ff(msk) = sig(msk);

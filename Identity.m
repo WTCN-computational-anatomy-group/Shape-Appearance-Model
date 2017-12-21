@@ -1,8 +1,9 @@
 function id = Identity(d)
-% Identity transform
+% Identity transform for deformations
 % FORMAT id = Identity(d)
 %
 % d  - Dimensions
+%
 % id - Identity transform (d(1) x d(2) x d(3) x 3 single)
 %
 %________________________________________________________

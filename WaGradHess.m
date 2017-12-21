@@ -1,16 +1,22 @@
 function [ga,Ha,nll] = WaGradHess(dat,mu,Wa,Wv,noise,s)
-% Compute derivatives w.r.t. appearance basis functions
+% Return derivatives w.r.t. appearance basis functions
 % FORMAT [ga,Ha,nll] = WaGradHess(dat,mu,Wa,Wv,noise,s)
-% dat   - Array of data
-% mu    - Mean
-% Wa    - Appearance basis functions
-% Wv    - Shape basis functions
-% noise - Noise information
-% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir & s.result_name
 %
-% ga    - Gradients
-% Ha    - Hessians
-% nll   - Negative log-likelihood
+% dat   - Structure containing various information about each image.
+%         Fields for each image n are:
+%         dat(n).f - Image data.
+%         dat(n).z - Expectations of latent variables.
+%         dat(n).S - Covariances of latent variables.
+% mu    - Mean.
+% Wa    - Appearance basis functions.
+% Wv    - Shape basis functions.
+% noise - Noise information.
+% s     - Settings. Uses s.likelihood, s.ondisk, s.result_dir and
+%         s.result_name.
+%
+% ga    - Gradients for updating  Wa.
+% Ha    - Hessians for updating Wa.
+% nll   - Negative log-likelihood.
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
@@ -27,7 +33,7 @@ d  = [size(mu), 1,1];
 d  = d(1:4);
 
 switch lower(s.likelihood)
-case {'normal','laplace'}
+case {'normal','gaussian'}
     d4 = d(4);
 case {'binomial','binary'}
     d4 = 1;

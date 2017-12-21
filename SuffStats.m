@@ -2,13 +2,19 @@ function [s0,s1,s2,mat] = SuffStats(dat,s)
 % Compute sufficient statistics
 % FORMAT [s0,s1,s2,mat] = SuffStats(dat)
 %
-% dat - Data. Uses dat(n).f
+% dat - Structure containing various information about each image.
+%       Fields for each image n are:
+%       dat(n).f - Image data.
+%       dat(n).z - Expectations of latent variables.
+%       dat(n).S - Covariances of latent variables.
 %
 % s0  - Zeroeth moment (number of observations)
 % s1  - First moment (sum over observations)
 % s2  - Second moment (sum of squares of observations)
 % mat - Voxel to world mapping
 %
+% This function is used as part of initialising the shape and appearance
+% model fitting.
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 
