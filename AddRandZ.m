@@ -9,6 +9,8 @@ function dat = AddRandZ(dat,Sig)
 %       dat(n).S - Covariances of latent variables.
 % Sig - Noise covariance
 %
+% Starting estimates of latent variables can not simply be all zero. The
+% symmetry needs to be broken, which can be done by random values.
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 

@@ -28,22 +28,22 @@ case {'addtoz'}
     data = AddToZ(data,varargin{:});
     PrivateData('set',name,nw,data);
 
-case {'updatezall'}
-    [data,varargout{1:no}] = UpdateZall(data,varargin{:});
+case {'updatelatentvariables'}
+    [data,varargout{1:no}] = UpdateLatentVariables(data,varargin{:});
     PrivateData('set',name,nw,data);
 
-case {'wvgradhess'}
+case {'shapederivatives'}
     s                 = varargin{5};
     s.result_name     = [s.result_name '_' num2str(nw)];
-    [varargout{1:no}] = WvGradHess(data,varargin{1:4},s);
+    [varargout{1:no}] = ShapeDerivatives(data,varargin{1:4},s);
 
-case {'wagradhess'}
+case {'appearancederivatives'}
     s                 = varargin{5};
     s.result_name     = [s.result_name '_' num2str(nw)];
-    [varargout{1:no}] = WaGradHess(data,varargin{1:4},s);
+    [varargout{1:no}] = AppearanceDerivatives(data,varargin{1:4},s);
 
-case {'mugradhess'}
-    [varargout{1:no}] = muGradHess(data,varargin{:});
+case {'meanderivatives'}
+    [varargout{1:no}] = MeanDerivatives(data,varargin{:});
 
 case {'computeof'}
     [varargout{1:no}] = ComputeOF(data,varargin{:});

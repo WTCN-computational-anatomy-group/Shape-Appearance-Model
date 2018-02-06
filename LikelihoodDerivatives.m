@@ -1,17 +1,17 @@
-function [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
+function [ll,g,H] = LikelihoodDerivatives(f,a0,psi,noise,s)
 % Compute gradients and Hessian w.r.t. voxelwise changes in appearance
-% FORMAT [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
+% FORMAT [ll,g,H] = LikelihoodDerivatives(f,a0,psi,noise,s)
 %
 % f     - image data (3/4D single precision)
 % a0    - atlas data (3/4D single)
-% iphi  - Deformation
+% psi   - Deformation
 % noise - noise precision (for Gaussian noise only)
 % s     - settings
 % s.likelihood - either 'normal', 'binomial' or 'multinomial'.
 %
-% ll  - log-likelihood
-% g   - Voxel-wise 1st derivatives 
-% H   - Voxel-wise 2nd derivatives
+% ll   - log-likelihood
+% g    - Voxel-wise 1st derivatives 
+% H    - Voxel-wise 2nd derivatives
 %
 % Note that for multi-channel images, H encodes a diagonal hessian matrix
 % except for 'multinomial', where the diagonal followed by the off-diagonal
@@ -26,7 +26,7 @@ function [ll,g,H] = AppearanceDerivs(f,a0,iphi,noise,s)
 
 d   = [size(a0) 1 1 1];
 d   = d(1:4);
-a1  = Pull(a0,iphi);
+a1  = Pull(a0,psi);
 msk = isfinite(f) & isfinite(a1);
 
 switch lower(s.likelihood)
@@ -89,6 +89,6 @@ otherwise
     error('Unknown likelihood function.');
 end
 
-g = Push(g,iphi);
-H = Push(H,iphi);
+g = Push(g,psi);
+H = Push(H,psi);
 

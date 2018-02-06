@@ -1,8 +1,8 @@
-function run_segment
+function RunSegment
 % Segment a bunch of images to generate "imported" versions.
-% This is a very preliminary version of a script for doing this.
+% This is a very simple function for doing this.
 
-images=spm_select(Inf,'nifti');
+images = spm_select(Inf,'nifti');
 
 parfor i=1:size(images,1)
     image = deblank(images(i,:));
@@ -28,12 +28,6 @@ obj.biasfwhm = 60;
 
 tpmname      = fullfile(spm('dir'),'tpm','TPM.nii');
 obj.lkp      = [1 1 2 2 3 3 4 4 5 5 5 6 6];
-
-%[pth,~,~]    = fileparts(mfilename('fullpath'));
-%tpmname      = fullfile(pth,'BlaiottaTPM.nii');
-%obj.lkp      = [1 1 2 2 3 3 4 4 4 5 6 6 7 7 7];
-
-
 obj.tpm      = spm_load_priors8(tpmname);
 obj.image    = spm_vol(char(image));
 

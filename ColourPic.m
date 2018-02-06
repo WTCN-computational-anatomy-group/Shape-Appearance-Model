@@ -5,6 +5,8 @@ function pic = ColourPic(a,likelihood)
 % a          - Image data to work from
 % likelihood - Either 'normal', 'binomial' or 'multinomial'.
 % pic        - The resulting colour picture
+%
+% This function is used for debugging purposes
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
 

@@ -14,11 +14,11 @@ function varargout = PGdistribute(opt,varargin)
 %       'GetZZ'      - Return sufficient statistics from latent variables.
 %       'TransfZ'    - Matrix pre-multiplication of latent variables.
 %       'AddToZ'     - Addition of vector to latent variables.
-%       'UpdateZall' - Re-estimate all latent variables and return useful
-%                      suffient statistics.
-%       'WvGradHess' - Return derivatives w.r.t. shape basis functions.
-%       'WaGradHess' - Return derivatives w.r.t. appearance basis functions.
-%       'MuGradHess' - Return derivatives w.r.t. appearance basis functions.
+%       'UpdateLatentVariables' - Re-estimate all latent variables and return useful
+%                                 suffient statistics.
+%       'ShapeDerivatives'      - Return derivatives w.r.t. shape basis functions.
+%       'AppearanceDerivatives' - Return derivatives w.r.t. appearance basis functions.
+%       'MeanDerivatives'       - Return derivatives w.r.t. mean.
 %       'ComputeOF'  - Return the likelihood part of objective function.
 %       'RandomZ'    - Initialise latent variables randomly.
 %       'AddRandZ'   - Add random nouse to latent variables.
@@ -104,24 +104,24 @@ case {'getzz'}
     N  = 0;
     Z  = 0;
     ZZ = 0;
-    sS = 0;
+    S  = 0;
     if par
         parfor nw=1:NW
             [n,z,zz,ss] = PGworker('getZZ', name, nw);
             if n
                 N  = N  + n;
-                Z  = Z + z;
+                Z  = Z  + z;
                 ZZ = ZZ + zz;
-                sS = sS + ss;
+                S  = S  + ss;
             end
         end
     else
-        [N,Z,ZZ,sS] = PGworker('getZZ', name, 1);
+        [N,Z,ZZ,S] = PGworker('getZZ', name, 1);
     end
     varargout{1} = N;
     varargout{2} = Z;
     varargout{3} = ZZ;
-    varargout{4} = sS;
+    varargout{4} = S;
 
 case {'transfz'}
     T = varargin{1};
@@ -143,7 +143,7 @@ case {'addtoz'}
         PGworker('AddToZ', name, 1,zs);
     end
 
-case {'updatezall'}
+case {'updatelatentvariables'}
     mu     = varargin{1};
     Wa     = varargin{2};
     Wv     = varargin{3};
@@ -160,7 +160,7 @@ case {'updatezall'}
         s1 = 0;
         Z  = 0;
         ZZ = 0;
-        sS = 0;
+        S  = 0;
         if CompSmo
             SmoSuf = 0;
         end
@@ -170,7 +170,7 @@ case {'updatezall'}
         end
 
         parfor nw=1:NW
-            st  = PGworker('UpdateZall',name, nw,mu,Wa,Wv,noise,A,s);
+            st  = PGworker('UpdateLatentVariables',name, nw,mu,Wa,Wv,noise,A,s);
             if ~isempty(st)
                 N      = N  + st.N;
                 L      = L  + st.L;
@@ -178,7 +178,7 @@ case {'updatezall'}
                 s0     = s0 + st.s0;
                 Z      = Z  + st.Z;
                 ZZ     = ZZ + st.ZZ;
-                sS     = sS + st.sS;
+                S      = S  + st.S;
                 if CompSmo
                     SmoSuf = SmoSuf + st.SmoSuf;
                 end
@@ -188,7 +188,7 @@ case {'updatezall'}
                 end
             end
         end
-        stats = struct('N',N, 'Z',Z, 'ZZ',ZZ, 'sS',sS, 's0',s0, 's1',s1, 'L', L);
+        stats = struct('N',N, 'Z',Z, 'ZZ',ZZ, 'S',S, 's0',s0, 's1',s1, 'L', L);
         if CompSmo
             stats.SmoSuf = SmoSuf;
         end
@@ -197,11 +197,11 @@ case {'updatezall'}
             stats.Hmu    = Hmu;
         end
     else
-        stats  = PGworker('UpdateZall',name, 1,mu,Wa,Wv,noise,A,s);
+        stats  = PGworker('UpdateLatentVariables',name, 1,mu,Wa,Wv,noise,A,s);
     end
     varargout{1} = stats;
 
-case {'wvgradhess'}
+case {'shapederivatives'}
     mu     = varargin{1};
     Wa     = varargin{2};
     Wv     = varargin{3};
@@ -213,11 +213,11 @@ case {'wvgradhess'}
     nll     = 0;
     if par
         parfor nw=1:NW
-            [gv_cell{nw},Hv_cell{nw},nll1] = PGworker('WvGradHess',name,nw, mu,Wa,Wv,noise,s);
+            [gv_cell{nw},Hv_cell{nw},nll1] = PGworker('ShapeDerivatives',name,nw, mu,Wa,Wv,noise,s);
             nll = nll + nll1;
         end
     else
-        [gv_cell{1},Hv_cell{1},nll] = PGworker('WvGradHess',name,1, mu,Wa,Wv,noise,s);
+        [gv_cell{1},Hv_cell{1},nll] = PGworker('ShapeDerivatives',name,1, mu,Wa,Wv,noise,s);
     end
 
     % Needs to deal with possibly empty results
@@ -248,7 +248,7 @@ case {'wvgradhess'}
         varargout{3} = 0;
     end
 
-case {'wagradhess'}
+case {'appearancederivatives'}
     mu     = varargin{1};
     Wa     = varargin{2};
     Wv     = varargin{3};
@@ -260,11 +260,11 @@ case {'wagradhess'}
     nll     = 0;
     if par
         parfor nw=1:NW
-            [ga_cell{nw},Ha_cell{nw},nll1] = PGworker('WaGradHess',name,nw,mu,Wa,Wv,noise,s);
+            [ga_cell{nw},Ha_cell{nw},nll1] = PGworker('AppearanceDerivatives',name,nw,mu,Wa,Wv,noise,s);
             nll = nll + nll1;
         end
     else
-        [ga_cell{1},Ha_cell{1},nll] = PGworker('WaGradHess',name,1,mu,Wa,Wv,noise,s);
+        [ga_cell{1},Ha_cell{1},nll] = PGworker('AppearanceDerivatives',name,1,mu,Wa,Wv,noise,s);
     end
 
     % Needs to deal with possibly empty results
@@ -295,7 +295,7 @@ case {'wagradhess'}
         varargout{3} = 0;
     end
 
-case {'mugradhess'}
+case {'meanderivatives'}
     mu     = varargin{1};
     Wa     = varargin{2};
     Wv     = varargin{3};
@@ -307,11 +307,11 @@ case {'mugradhess'}
     Hmu_cell = cell(1,NW);
     if par
         parfor nw=1:NW
-            [gmu_cell{nw},Hmu_cell{nw},nll1] = PGworker('muGradHess',name,nw,mu,Wa,Wv,noise,s);
+            [gmu_cell{nw},Hmu_cell{nw},nll1] = PGworker('MeanDerivatives',name,nw,mu,Wa,Wv,noise,s);
             nll = nll + nll1;
         end
     else
-        [gmu_cell{1},Hmu_cell{1},nll] = PGworker('muGradHess',name,1,mu,Wa,Wv,noise,s);
+        [gmu_cell{1},Hmu_cell{1},nll] = PGworker('MeanDerivatives',name,1,mu,Wa,Wv,noise,s);
     end
 
     % Needs to deal with possibly empty results

@@ -1,10 +1,10 @@
-function [s0,s1,SmoSuf] = ComputeSmoSuf(f,a0,iphi,s)
+function [s0,s1,SmoSuf] = ComputeSmoSuf(f,a0,psi,s)
 % Smoothness and residuals stuff (not fully used)
-% FORMAT [s0,s1,SmoSuf] = ComputeSmoSuf(f,a0,iphi,s)
+% FORMAT [s0,s1,SmoSuf] = ComputeSmoSuf(f,a0,psi,s)
 %
 % f      - Image
 % a0     - Mean + linear combination of appearance bases
-% iphi   - Deformation
+% psi   - Deformation
 % s      - Settings. Uses s.likelihood
 %
 % s0     - Number of voxels
@@ -18,7 +18,7 @@ function [s0,s1,SmoSuf] = ComputeSmoSuf(f,a0,iphi,s)
 % John Ashburner
 % $Id$
 
-a1  = Pull(a0,iphi);
+a1  = Pull(a0,psi);
 msk = all(isfinite(f),4) & all(isfinite(a1),4);
 s0  = sum(msk(:));
 d   = [size(a1) 1 1 1];

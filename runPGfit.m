@@ -42,7 +42,7 @@ end
 %t_settings.verbose = true;
 
 % Run the fitting
-[dat,~] = UpdateZall(dat,res.mu,res.Wa,res.Wv,res.noise,res.RegZ,t_settings);
+[dat,~] = UpdateLatentVariables(dat,res.mu,res.Wa,res.Wv,res.noise,res.RegZ,t_settings);
 
 % Save the latent variable expectations
 Z  = cat(2,dat.z);

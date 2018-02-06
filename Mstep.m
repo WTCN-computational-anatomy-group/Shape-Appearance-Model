@@ -38,7 +38,7 @@ if Ka<K || Kv<K
     indv = indv + Ka;
 end
 
-RegW = double(s.wt(1)*B  + s.wt(2)*ZZ);
+RegW = double(s.lambda(1)*B  + s.lambda(2)*ZZ);
 
 WW            = zeros(K);
 WW(inda,inda) = WW(inda,inda) + WWa;
@@ -46,7 +46,7 @@ WW(indv,indv) = WW(indv,indv) + WWv;
 
 if numel(indv)>0
 
-    [gv,Hv,nll] = PGdistribute('WvGradHess',mu,Wa,Wv,noise,s);
+    [gv,Hv,nll] = PGdistribute('ShapeDerivatives',mu,Wa,Wv,noise,s);
 
     if ~isempty(nll)
 
@@ -61,8 +61,7 @@ if numel(indv)>0
         end
         prev.WWv    = WWv;
 
-        nll0        = nll+0.5*s.wt(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.wt(2)*trace(WW*ZZ);
-        %fprintf(' [%g %g %g %g] ', nll, 0.5*s.wt(1)*trace(WW*B), 0.5*s.wt(1)*trace(A*ZZ), 0.5*s.wt(2)*trace(WW*ZZ));
+        nll0        = nll+0.5*s.lambda(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.lambda(2)*trace(WW*ZZ);
         fprintf('%9.6g ', -nll0);
 
         for subit=1:8
@@ -73,14 +72,13 @@ if numel(indv)>0
             WW(indv,indv) = WW(indv,indv) + WWv;
 
             if numel(inda)>0
-                [ga,Ha,nll1] = PGdistribute('WaGradHess',mu,Wa,Wv,noise,s);
+                [ga,Ha,nll1] = PGdistribute('AppearanceDerivatives',mu,Wa,Wv,noise,s);
             else
                 nll1         = PGdistribute('ComputeOF',mu,Wa,Wv,noise,s);
             end
 
-            %fprintf(' [%g %g %g %g] ', nll1, 0.5*s.wt(1)*trace(WW*B), 0.5*s.wt(1)*trace(A*ZZ), 0.5*s.wt(2)*trace(WW*ZZ));
 
-            nll              = nll1 + 0.5*s.wt(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.wt(2)*trace(WW*ZZ);
+            nll              = nll1 + 0.5*s.lambda(1)*(trace(WW*B) + trace(A*ZZ)) + 0.5*s.lambda(2)*trace(WW*ZZ);
 
            %if ~isfinite(nll), error('Something went wrong.'); end
             if nll<max(nll0*0.999999,nll0*1.000001)
@@ -98,7 +96,7 @@ if numel(indv)>0
     end
 else
     if numel(inda)>0
-        [ga,Ha]   = PGdistribute('WaGradHess',mu,Wa,Wv,noise,s);
+        [ga,Ha]   = PGdistribute('AppearanceDerivatives',mu,Wa,Wv,noise,s);
     end
 end
 if numel(inda) > 0

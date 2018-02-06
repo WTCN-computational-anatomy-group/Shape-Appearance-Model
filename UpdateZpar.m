@@ -26,8 +26,8 @@ CompMu  = false;
 
 a0   = GetA0(z,Wa,mu); % Compute linear combination of appearance modes
 v0   = GetV0(z,Wv);    % Linear combination of shape components
-iphi = GetIPhi(v0,s);
-subj = struct('f',f,'z',z,'a0',a0,'v0',v0,'iphi',iphi,'a',[],'Ha',[],'g',[],'H1',[],'nll',[],'S',[],'dz',[],'da',[],'dv',[],'stop',false);
+psi  = GetPsi(v0,s);
+subj = struct('f',f,'z',z,'a0',a0,'v0',v0,'psi',psi,'a',[],'Ha',[],'g',[],'H1',[],'nll',[],'S',[],'dz',[],'da',[],'dv',[],'stop',false);
 
 A   = double(A); % Use double
 K   = size(A,1);
@@ -37,7 +37,7 @@ for subit=1:s.nit
         if ~subj(n).stop
             subj(n).g  = 0; % Gradients
             subj(n).H1 = 0; % Hessian
-            [ll,subj(n).a,subj(n).Ha] = AppearanceDerivs(subj(n).f,subj(n).a0,subj(n).iphi,noise,s);
+            [ll,subj(n).a,subj(n).Ha] = LikelihoodDerivatives(subj(n).f,subj(n).a0,subj(n).psi,noise,s);
             subj(n).nll = -ll + 0.5*subj(n).z'*A*subj(n).z;
         end
     end
@@ -90,9 +90,9 @@ for subit=1:s.nit
             % If there's an a0 field, then the linesearch has found a better solution, so save some of
             % the stuff that has been computed, ready for the next iteration.
             if isfield(misc,'a0')
-                subj(n).a0   = misc.a0;
-                subj(n).v0   = misc.v0;
-                subj(n).iphi = misc.iphi;
+                subj(n).a0  = misc.a0;
+                subj(n).v0  = misc.v0;
+                subj(n).psi = misc.psi;
                 if abs(nll-subj(n).nll)<1e-3
                     subj(n).stop = true;
                 end
@@ -134,10 +134,10 @@ if nargout>=4
         if CompSmo
             % Compute sufficient statistics used for estimating the smoothness of the residuals.
             % These are used for adjusting the number of observations via a bit of random field theory.
-            [s0,s1,SmoSuf] = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).iphi,s);
+            [s0,s1,SmoSuf] = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).psi,s);
             omisc.SmoSuf   = omisc.SmoSuf + SmoSuf;
         else
-            [s0,s1]        = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).iphi,s);
+            [s0,s1]        = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).psi,s);
         end
         % This was originally an adjustment to the sufficient statistics for computing the noise (Gaussian npoise model).
         % The idea was to make a Bayesian estimate that accounts for the uncertainty with which
@@ -156,7 +156,7 @@ if nargout>=4
 
         if CompMu
             % Sufficient statistics that are used for recomouting the mean
-            [gmu,Hmu]    = AppearanceDerivs(subj(n).f,subj(n).a0,subj(n).iphi,noise,s);
+            [gmu,Hmu]    = LikelihoodDerivatives(subj(n).f,subj(n).a0,subj(n).psi,noise,s);
             omisc.gmu    = omisc.gmu + gmu;
             omisc.Hmu    = omisc.Hmu + Hmu;
         end
@@ -259,21 +259,21 @@ for subit = 1:nsubit
         a0   = a0o;
     end
     if numel(dv0)>0
-        v0   = v0o - armijo*dv0;
-        iphi = GetIPhi(v0,s); % Could achieve slight speedup by precomputing the kernel
+        v0  = v0o - armijo*dv0;
+        psi = GetPsi(v0,s); % Could achieve slight speedup by precomputing the kernel
     else
-        v0   = v0o;
-        iphi = [];
+        v0  = v0o;
+        psi = [];
     end
-    nll  = -AppearanceDerivs(f,a0,iphi,noise,s) + 0.5*z'*A*z;
-    if verb, fprintf(' %g', nll); end;%ShowPic(f,a0,iphi,mu,s); end
+    nll  = -LikelihoodDerivatives(f,a0,psi,noise,s) + 0.5*z'*A*z;
+    if verb, fprintf(' %g', nll); end;%ShowPic(f,a0,psi,mu,s); end
 
     if nll>onll
-        armijo  = armijo*0.5;
+        armijo   = armijo*0.5;
     else
-        misc.a0   = a0;
-        misc.v0   = v0;
-        misc.iphi = iphi;
+        misc.a0  = a0;
+        misc.v0  = v0;
+        misc.psi = psi;
         if verb, fprintf('\n'); end
         return;
     end
@@ -286,11 +286,11 @@ if verb, fprintf('\n'); end
 %==========================================================================
 %
 %==========================================================================
-function ShowPic(f,a0,iphi,mu,s)
+function ShowPic(f,a0,psi,mu,s)
 %return; % This function is disabled
 
-a1  = Pull(a0,iphi);
-mu1 = Pull(mu,iphi);
+a1  = Pull(a0,psi);
+mu1 = Pull(mu,psi);
 
 msk = ~isfinite(f);
 ff  = f;

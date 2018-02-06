@@ -1,6 +1,6 @@
-function [dat,stats] = UpdateZall(dat,mu,Wa,Wv,noise,A,s)
+function [dat,stats] = UpdateLatentVariables(dat,mu,Wa,Wv,noise,A,s)
 % Re-estimate all latent variables and return useful suffient statistics
-% FORMAT [dat,stats] = UpdateZall(dat,mu,Wa,Wv,noise,A,s)
+% FORMAT [dat,stats] = UpdateLatentVariables(dat,mu,Wa,Wv,noise,A,s)
 %
 % dat   - Structure containing various information about each image.
 %         Fields for each image n are:
@@ -30,7 +30,7 @@ if isempty(dat), stats=[]; return; end
 batchsize = 1;
 if isfield(s,'batchsize'), batchsize = s.batchsize; end
 
-stats = struct('N',numel(dat), 'Z',0, 'ZZ',0, 'sS',0, 's0',0, 's1',0, 'L', 0);
+stats = struct('N',numel(dat), 'Z',0, 'ZZ',0, 'S',0, 's0',0, 's1',0, 'L', 0);
 
 if CompSmo
     stats.SmoSuf = 0;
@@ -61,7 +61,7 @@ for n1=1:batchsize:numel(dat)
     stats.s0     = stats.s0     + omisc.s0;
     stats.Z      = stats.Z      + sum(z,2);
     stats.ZZ     = stats.ZZ     + z*z';
-    stats.sS     = stats.sS     + S;
+    stats.S      = stats.S      + S;
     if CompSmo
         stats.SmoSuf = stats.SmoSuf + omisc.SmoSuf;
     end

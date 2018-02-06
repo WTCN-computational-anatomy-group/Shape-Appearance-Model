@@ -1,9 +1,9 @@
-function [f1,rho] = Push(f,iphi)
+function [f1,rho] = Push(f,psi)
 % Push an image (or set of images) accorging to a spatial transform
-% FORMAT [f1,rho] = Push(f,iphi)
+% FORMAT [f1,rho] = Push(f,psi)
 %
 % f    - Image (3D or 4D)
-% iphi - Spatial transform
+% psi - Spatial transform
 %
 % f1   - "Pushed" image
 % rho  - Count of voxels pushed
@@ -14,8 +14,8 @@ function [f1,rho] = Push(f,iphi)
 % John Ashburner
 % $Id$
 
-if ~isempty(iphi)
-    [f1,rho] = spm_diffeo('pushc',single(f),iphi);
+if ~isempty(psi)
+    [f1,rho] = spm_diffeo('pushc',single(f),psi);
 else
     f1  = f;
     msk = all(isfinite(f1),4);

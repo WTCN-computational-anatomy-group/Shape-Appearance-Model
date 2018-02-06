@@ -32,8 +32,8 @@ for n1=1:batchsize:numel(dat)
     dat1  = dat(nn);
 
     parfor n=1:numel(nn)
-        iphi = GetIPhi(cell1{n},s);
-        nll  = nll - AppearanceDerivs(GetDat(dat1(n),s),cell2{n},iphi,noise,s);
+        psi = GetPsi(cell1{n},s);
+        nll = nll - LikelihoodDerivatives(GetDat(dat1(n),s),cell2{n},psi,noise,s);
     end
 if ~isfinite(nll), crash; end
 

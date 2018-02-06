@@ -1,6 +1,6 @@
-function [ga,Ha,nll] = WaGradHess(dat,mu,Wa,Wv,noise,s)
+function [ga,Ha,nll] = AppearanceDerivatives(dat,mu,Wa,Wv,noise,s)
 % Return derivatives w.r.t. appearance basis functions
-% FORMAT [ga,Ha,nll] = WaGradHess(dat,mu,Wa,Wv,noise,s)
+% FORMAT [ga,Ha,nll] = AppearanceDerivatives(dat,mu,Wa,Wv,noise,s)
 %
 % dat   - Structure containing various information about each image.
 %         Fields for each image n are:
@@ -68,10 +68,10 @@ for n1=1:batchsize:numel(dat)
     dat1  = dat(nn);
 
     parfor n=1:numel(nn)
-        iphi      = GetIPhi(cell1{n},s);
+        psi       = GetPsi(cell1{n},s);
         a0        = cell2{n};
         f         = GetDat(dat1(n),s);
-        [tmp,g,H] = AppearanceDerivs(f,a0,iphi,noise,s);
+        [tmp,g,H] = LikelihoodDerivatives(f,a0,psi,noise,s);
         nll       = nll - tmp;
         cell1{n}  = g;
         cell2{n}  = H;

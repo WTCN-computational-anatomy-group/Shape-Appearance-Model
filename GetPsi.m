@@ -1,19 +1,19 @@
-function iphi = GetIPhi(varargin)
+function psi = GetPsi(varargin)
 % Compute a diffeomorphism from shape basis functions
-% FORMAT iphi = GetIPhi(z,Wv,s)
+% FORMAT psi = GetPsi(z,Wv,s)
 %
-% z    - Latent variables
-% Wv   - Shape basis functions
-% s    - Settings. Uses s.vx, s.v_settings & s.int_args.
+% z   - Latent variables
+% Wv  - Shape basis functions
+% s   - Settings. Uses s.vx, s.v_settings & s.int_args.
 %
-% iphi - The resulting diffeomorphism
+% psi - The resulting diffeomorphism
 %
-% FORMAT iphi = GetIPhi(v0,s)
+% FORMAT psi = GetPsi(v0,s)
 %
-% v0   - Initial velocity
-% s    - Settings. Uses s.vx, s.v_settings & s.int_args.
+% v0  - Initial velocity
+% s   - Settings. Uses s.vx, s.v_settings & s.int_args.
 %
-% iphi - The resulting diffeomorphism
+% psi - The resulting diffeomorphism
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
@@ -33,11 +33,11 @@ else
     error('Unknown option.');
 end
 if ~iscell(v0)
-    iphi = Shoot(v0,[s.vx s.v_settings],s.int_args);
+    psi = Shoot(v0,[s.vx s.v_settings],s.int_args);
 else
     for n=1:numel(v0)
         v0{n} = Shoot(v0{n},[s.vx s.v_settings],s.int_args);
     end
-    iphi = v0;
+    psi = v0;
 end
 

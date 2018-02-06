@@ -1,15 +1,16 @@
-function [A,B,lb_qA,lb_pA] = SetReg(EZZ,N,~)
+function [A,B,lb_qA,lb_pA,ElndetA] = SetReg(EZZ,N,s)
 % Set the regularisation of Z
-% FORMAT [A,B,lb_qA,lb_pA] = SetReg(EZZ,N,s)
+% FORMAT [A,B,lb_qA,lb_pA,ElndetA] = SetReg(EZZ,N,s)
 %
-% EZZ   - Expectation of Z*Z' (where Z encodes the modes of the estimates)
-% N     - Number of observations
-% s     - Settings. Uses s.nu0 & s.Lambda0
+% EZZ     - Expectation of Z*Z' (where Z encodes the modes of the estimates)
+% N       - Number of observations
+% s       - Settings. May use s.nu0 & s.Lambda0 if available.
 %
-% A     - Expectation of A
-% B     - B regularisation
-% lb_qA - Lower bound stuff (needs more work)
-% lb_pA - Lower bound stuff (needs more work)
+% A       - Expectation of A
+% B       - B regularisation
+% lb_qA   - Lower bound stuff (needs more work)
+% lb_pA   - Lower bound stuff (needs more work)
+% ElndetA - E[log(det(A))]
 %
 %__________________________________________________________________________
 % Copyright (C) 2017 Wellcome Trust Centre for Neuroimaging
@@ -18,12 +19,11 @@ function [A,B,lb_qA,lb_pA] = SetReg(EZZ,N,~)
 % $Id$
 
 K       = size(EZZ,1);
-%if nargin<3, s = struct; end
-B       = eye(K);
-A       = inv((EZZ+max(diag(EZZ))*1e-5*eye(size(EZZ)))/N);
+B       = eye(K)*N;
 
-if false
-if isfield(s,'nu0')
+if nargin<3, s = struct; end
+
+if isfield(s,'nu0') && s.nu0 > 0,
     % Get the Wishart Priors
     nu0 = s.nu0;
     if isfield(s,'Lambda0')
@@ -34,32 +34,23 @@ if isfield(s,'nu0')
 
     nu     = N + nu0;
     Laminv = inv(double(Lambda0))+EZZ;
-else
-    % Maximum likelihood
-    nu     = N;
-    Laminv = EZZ;
-end
+    Lambda = inv(Laminv);
+    A      = Lambda*nu;
 
-% Stable inverse, as no ARD-style pruning is used
-[V,D]    = eig(Laminv);
-D        = diag(D);
-D        = diag(max(D,max(D)*K*1e-6));
-Lambda   = real(V*inv(D)*V');
-%Lambda   = diag(diag(Lambda));
-%reg      = mean(diag(Laminv))*eye(size(Laminv));
-%Lambda   = inv((1-0.01)*Laminv + 0.01*reg);
+    if s.nu0 > K
+        ElndetA  = Elogdet(Lambda,nu);
+        lb_qA    = 0.5*(nu -K-1)*ElndetA - 0.5*trace(Lambda \A) -0.5*nu *K*log(2) - 0.5*nu *LogDet(Lambda ) - MultiGammaLn(nu /2,K);
+        lb_pA    = 0.5*(nu0-K-1)*ElndetA - 0.5*trace(Lambda0\A) -0.5*nu0*K*log(2) - 0.5*nu0*LogDet(Lambda0) - MultiGammaLn(nu0/2,K);
+    else
+        ElndetA = LogDet(A);
+        lb_qA   = 0;
+        lb_pA   = 0;
+    end
 
-A        = Lambda*nu;
-end
-if false
-    % Unused stuff - possibly for fixing later
-    ElndetA  = Elogdet(Lambda,nu);
-    lb_qA    = 0.5*(nu -K-1)*ElndetA - 0.5*trace(Lambda \A)...
-              -0.5*nu *K*log(2) - 0.5*nu *LogDet(Lambda ) - MultiGammaLn(nu /2,K);
-    lb_pA    = 0.5*(nu0-K-1)*ElndetA - 0.5*trace(Lambda0\A)...
-              -0.5*nu0*K*log(2) - 0.5*nu0*LogDet(Lambda0) - MultiGammaLn(nu0/2,K);
 else
-    lb_qA = 0;
-    lb_pA = 0;
+    A       = inv((EZZ+max(diag(EZZ))*1e-5*eye(size(EZZ)))/N);
+    ElndetA = LogDet(A);
+    lb_qA   = 0;
+    lb_pA   = 0;
 end
 

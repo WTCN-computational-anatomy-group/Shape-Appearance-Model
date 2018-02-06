@@ -40,10 +40,6 @@ function varargout = Shoot(v0,settings,args)
 % applications". Quarterly of Applied Mathematics, vol LXV,
 % number 1, pages 113-134 (2007).
 %
-% Multigrid is currently used to obtain v_t = L^{-1} m_t, but
-% this could also be done by convolution with the Greens function
-% N = L^{-1} (see e.g. Bro-Nielson).
-%
 %________________________________________________________
 % (c) Wellcome Trust Centre for NeuroImaging (2013-2017)
 
@@ -94,7 +90,7 @@ for t=2:abs(N)
     mt1(:,:,:,3) = Jdp(:,:,:,1,3).*mt(:,:,:,1) + Jdp(:,:,:,2,3).*mt(:,:,:,2) + Jdp(:,:,:,3,3).*mt(:,:,:,3);
     mt           = spm_diffeo('pushc',mt1,id+vt/N);
 
-    vt           = spm_shoot_greens(mt,F,settings);
+    vt           = spm_shoot_greens(mt,F,settings); % Convolve with Greens function of L
     dp           = id - vt/N;
 
     theta(:,:,:,1) = spm_diffeo('bsplins',theta(:,:,:,1)-id(:,:,:,1),dp,[1 1 1  1 1 1]) + dp(:,:,:,1);

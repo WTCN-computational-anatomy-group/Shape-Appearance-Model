@@ -1,6 +1,6 @@
-function [gv,Hv,nll] = WvGradHess(dat,mu,Wa,Wv,noise,s)
+function [gv,Hv,nll] = ShapeDerivatives(dat,mu,Wa,Wv,noise,s)
 % Return derivatives w.r.t. shape basis functions
-% FORMAT [gv,Hv,nll] = WaGradHess(dat,mu,Wa,Wv,noise,s)
+% FORMAT [gv,Hv,nll] = ShapeDerivatives(dat,mu,Wa,Wv,noise,s)
 %
 % dat   - Structure containing various information about each image.
 %         Fields for each image n are:
@@ -72,10 +72,10 @@ for n1=1:batchsize:numel(dat)
     dat1  = dat(nn);
 
     parfor n=1:numel(nn)
-        iphi       = GetIPhi(cell1{n},s);
+        psi        = GetPsi(cell1{n},s);
         a0         = cell2{n};
         f          = GetDat(dat1(n),s);
-        [ll,a,Ha]  = AppearanceDerivs(f,a0,iphi,noise,s);
+        [ll,a,Ha]  = LikelihoodDerivatives(f,a0,psi,noise,s);
         nll        = nll - ll;
         if Ka>0, G = CompGrads(a0); else G = Gmu; end
         [cell1{n},cell2{n}] = ShapeDerivs(a,Ha,G,s.likelihood);

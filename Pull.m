@@ -1,9 +1,9 @@
-function a1 = Pull(a0,iphi)
+function a1 = Pull(a0,psi)
 % Resample an image or set of images
-% FORMAT a1 = Pull(a0,iphi)
+% FORMAT a1 = Pull(a0,psi)
 %
 % a0      - Input image(s)
-% iphi    - Deformation
+% psi    - Deformation
 %
 % a1      - Output image(s)
 %
@@ -15,13 +15,13 @@ function a1 = Pull(a0,iphi)
 
 if isempty(a0)
     a1 = a0;
-elseif isempty(iphi)
+elseif isempty(psi)
     a1 = a0;
 else
     d  = [size(a0) 1 1];
     a1 = zeros(d,'single');
     for l=1:d(4)
-        a1(:,:,:,l) = spm_diffeo('bsplins',a0(:,:,:,l),iphi,[1 1 1  1 1 1]);
+        a1(:,:,:,l) = spm_diffeo('bsplins',a0(:,:,:,l),psi,[1 1 1  1 1 1]);
     end
 end
 
