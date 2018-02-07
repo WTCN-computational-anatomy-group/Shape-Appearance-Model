@@ -1,6 +1,6 @@
 function varargout = Shoot(v0,settings,args)
 % Geodesic shooting
-% FORMAT theta = Shoot(v0,settings,args)
+% FORMAT psi = Shoot(v0,settings,args)
 %
 % v0       - Initial velocity field n1*n2*n3*3 (single prec. float)xi
 % settings - 8 settings
@@ -15,7 +15,7 @@ function varargout = Shoot(v0,settings,args)
 % args     - Integration parameters
 %            - [1] Num time steps
 %
-% theta    - Inverse deformation field n1*n2*n3*3 (single prec. float)
+% psi      - Inverse deformation field n1*n2*n3*3 (single prec. float)
 %
 % This code generates inverse deformations from
 % initial velocity fields by gedesic shooting.  See the work of Miller,
@@ -27,13 +27,13 @@ function varargout = Shoot(v0,settings,args)
 % for the time varying velocity field.
 % In principle though, once the initial velocity is known, then the
 % velocity at subsequent time points can be computed.  This requires
-% initial momentum (m_0), computed (using differential operator L) by:
-%     m_0 = L v_0
+% initial momentum (u_0), computed (using differential operator L) by:
+%     u_0 = L v_0
 % Then (Ad_{\phi_t})^* m_0 is computed:
-%     m_t = |d \phi_t| (d\phi_t)^T m_0(\phi_t)
+%     u_t = |d \phi_t| (d\phi_t)^T u_0(\phi_t)
 % The velocity field at this time point is then obtained by using
 % multigrid to solve:
-%     v_t = L^{-1} m_t
+%     v_t = L^{-1} u_t
 %
 % These equations can be found in:
 % Younes (2007). "Jacobi fields in groups of diffeomorphisms and
@@ -61,7 +61,7 @@ else
     end
 end
 
-N     = args(1);   % # Time steps
+T     = args(1);   % # Time steps
 d     = size(v0);
 d     = d(1:3);
 id    = Identity(d);
@@ -71,32 +71,39 @@ id    = Identity(d);
 %    varargout{2} = v0;
 %end
 
-if ~isfinite(N),
+if ~isfinite(T),
     % Number of time steps from an educated guess about how far to move
-    N = double(floor(sqrt(max(max(max(v0(:,:,:,1).^2+v0(:,:,:,2).^2+v0(:,:,:,3).^2)))))+1);
+    T = double(floor(sqrt(max(max(max(v0(:,:,:,1).^2+v0(:,:,:,2).^2+v0(:,:,:,3).^2)))))+1);
 end
 
 spm_diffeo('boundary',0);
-F     = spm_shoot_greens('kernel',d,settings); % Could save time if this went outside
-vt    = v0;
-mt    = spm_diffeo('vel2mom',vt,settings); % Initial momentum (m_0 = L v_0)
-theta = id - vt/N;
+F   = spm_shoot_greens('kernel',d,settings); % Could save time if this went outside
+v   = v0;
+u   = spm_diffeo('vel2mom',v,settings); % Initial momentum (u_0 = L v_0)
+psi = id - v/T;
 
-for t=2:abs(N)
-    Jdp          = spm_diffeo('jacobian',id-vt/N);
-    mt1          = zeros(size(mt),'single');
-    mt1(:,:,:,1) = Jdp(:,:,:,1,1).*mt(:,:,:,1) + Jdp(:,:,:,2,1).*mt(:,:,:,2) + Jdp(:,:,:,3,1).*mt(:,:,:,3);
-    mt1(:,:,:,2) = Jdp(:,:,:,1,2).*mt(:,:,:,1) + Jdp(:,:,:,2,2).*mt(:,:,:,2) + Jdp(:,:,:,3,2).*mt(:,:,:,3);
-    mt1(:,:,:,3) = Jdp(:,:,:,1,3).*mt(:,:,:,1) + Jdp(:,:,:,2,3).*mt(:,:,:,2) + Jdp(:,:,:,3,3).*mt(:,:,:,3);
-    mt           = spm_diffeo('pushc',mt1,id+vt/N);
+for t=2:abs(T)
+    % The update of u_t is not exactly as described in the paper, but describing this might be a bit
+    % tricky. The approach here was the most stable one I could find - although it does lose some
+    % energy as < v_t, u_t> decreases over time steps.
+    Jdp         = spm_diffeo('jacobian',id-v/T);
+    u1          = zeros(size(u),'single');
+    u1(:,:,:,1) = Jdp(:,:,:,1,1).*u(:,:,:,1) + Jdp(:,:,:,2,1).*u(:,:,:,2) + Jdp(:,:,:,3,1).*u(:,:,:,3);
+    u1(:,:,:,2) = Jdp(:,:,:,1,2).*u(:,:,:,1) + Jdp(:,:,:,2,2).*u(:,:,:,2) + Jdp(:,:,:,3,2).*u(:,:,:,3);
+    u1(:,:,:,3) = Jdp(:,:,:,1,3).*u(:,:,:,1) + Jdp(:,:,:,2,3).*u(:,:,:,2) + Jdp(:,:,:,3,3).*u(:,:,:,3);
+    u           = spm_diffeo('pushc',u1,id+v/T);
 
-    vt           = spm_shoot_greens(mt,F,settings); % Convolve with Greens function of L
-    dp           = id - vt/N;
+    % v_t \gets L^g u_t
+    v            = spm_shoot_greens(u,F,settings); % Convolve with Greens function of L
 
-    theta(:,:,:,1) = spm_diffeo('bsplins',theta(:,:,:,1)-id(:,:,:,1),dp,[1 1 1  1 1 1]) + dp(:,:,:,1);
-    theta(:,:,:,2) = spm_diffeo('bsplins',theta(:,:,:,2)-id(:,:,:,2),dp,[1 1 1  1 1 1]) + dp(:,:,:,2);
-    theta(:,:,:,3) = spm_diffeo('bsplins',theta(:,:,:,3)-id(:,:,:,3),dp,[1 1 1  1 1 1]) + dp(:,:,:,3);
+    % $\psi \gets \psi \circ (id - \tfrac{1}{T} v)$
+    % Done in a slightly complicated way to make it easier to deal with wrapped boundary conditions
+    % I found that simply using $\psi \gets \psi - \tfrac{1}{T} (D \psi) v$ was not so stable.
+    dp           = id - v/T;
+    psi(:,:,:,1) = spm_diffeo('bsplins',psi(:,:,:,1)-id(:,:,:,1),dp,[1 1 1  1 1 1]) + dp(:,:,:,1);
+    psi(:,:,:,2) = spm_diffeo('bsplins',psi(:,:,:,2)-id(:,:,:,2),dp,[1 1 1  1 1 1]) + dp(:,:,:,2);
+    psi(:,:,:,3) = spm_diffeo('bsplins',psi(:,:,:,3)-id(:,:,:,3),dp,[1 1 1  1 1 1]) + dp(:,:,:,3);
 end
-varargout{1} = theta;
-varargout{2} = vt;
+varargout{1} = psi;
+varargout{2} = v;
 
