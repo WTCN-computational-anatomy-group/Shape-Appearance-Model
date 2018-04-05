@@ -84,7 +84,6 @@ for iter=1:100
         E  = 0.5*(trace(Q*ZZ1*Q*A) + trace(WW1/(Q*Q)));
         if (oE-E)/E < 1e-8, break; end
     end
-
     % If outer-loop objective function is unchannged, then done.
     if abs(oE0-E)/E < 1e-7, break; end
 end

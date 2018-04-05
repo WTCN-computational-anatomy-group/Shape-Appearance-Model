@@ -51,8 +51,8 @@ for subit=1:s.nit
         parfor n=1:numel(subj)
             if ~subj(n).stop
                 [dg,dh]    = SliceComp(subj(n).z,subj(n).a(:,:,x3,:),subj(n).Ha(:,:,x3,:),subj(n).a0,x3,wa,wv,s);
-                subj(n).g  = subj(n).g  + dg;
-                subj(n).H1 = subj(n).H1 + dh;
+                subj(n).g  = subj(n).g  + double(dg);
+                subj(n).H1 = subj(n).H1 + double(dh);
             end
         end
     end
@@ -70,7 +70,7 @@ for subit=1:s.nit
             g  = subj(n).g  + double(A*subj(n).z); % Add prior term of gradient
             H  = subj(n).H1 + double(A);           % Add prior term of hessian
 
-            R  = (max(diag(H))*1e-7)*eye(K);       % Regularisation done in case H is singular
+            R  = (max(diag(H))*1e-9)*eye(K);       % Regularisation done in case H is singular
             H  = H+R;
 
             subj(n).S  = inv(H); % S encodes the uncertainty of the z estimates (Laplace approximation)
@@ -268,7 +268,7 @@ for subit = 1:nsubit
     nll  = -LikelihoodDerivatives(f,a0,psi,noise,s) + 0.5*z'*A*z;
     if verb, fprintf(' %g', nll); end;%ShowPic(f,a0,psi,mu,s); end
 
-    if nll>onll
+    if nll>onll && abs(nll-onll)/abs(nll) > 1e-6
         armijo   = armijo*0.5;
     else
         misc.a0  = a0;

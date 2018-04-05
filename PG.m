@@ -67,7 +67,7 @@ else
     % Should really include some checks here
     PGdistribute('init',s);
     [ss.N,ss.Z,ss.ZZ,ss.S] = PGdistribute('GetZZ');
-    Cv    = eye(size(ss.ZZ))*max(diag(ss.ZZ))/ss.N*0.01; % Break symmetry if necessary
+    Cv    = eye(size(ss.ZZ))*max(diag(ss.ZZ))/ss.N*0.1; % Break symmetry if necessary
     PGdistribute('AddRandZ',Cv);
     [ss.N,ss.Z,ss.ZZ,ss.S] = PGdistribute('GetZZ');
 
@@ -101,10 +101,11 @@ for iter = 1:maxit,
     noise = NoiseModel(ss,s,d);
 
     % Zero-mean Z and recompute the mean mu
-    %fprintf(' (%g,%g) ', norm(ss.Z/ss.N),sqrt(trace(ss.ZZ)/ss.N));
+    % fprintf(' (%g,%g) ', norm(ss.Z/ss.N),sqrt(trace(ss.ZZ)/ss.N));
     PGdistribute('AddToZ',-ss.Z/ss.N);
     ss.ZZ             = ss.ZZ - ss.Z*ss.Z'/ss.N;
     ss.Z              = ss.Z*0;
+
     [ss.gmu,ss.Hmu,~] = PGdistribute('MeanDerivatives',mu,Wa,Wv,noise,s);
     [mu,lb_pmu]       = UpdateMu(mu,ss.gmu,ss.Hmu,ss.N,s);
     if isfield(s,'ondisk') && s.ondisk

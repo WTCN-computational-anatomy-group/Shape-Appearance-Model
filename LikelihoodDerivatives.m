@@ -58,7 +58,7 @@ case {'binomial','binary'}
     sig = ea./(1+ea);
     sig(~msk) = NaN;
     g   = noise.nu_factor*(sig-f);
-    H   = noise.nu_factor*((sig.*(1-sig) + 1e-3));
+    H   = noise.nu_factor*((sig.*(1-sig) + 1e-8));
 
 case {'multinomial','categorical'}
     % Could be made more efficient in terms of disk I/O etc.  This representation
