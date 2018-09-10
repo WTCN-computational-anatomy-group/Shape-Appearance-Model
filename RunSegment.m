@@ -43,7 +43,11 @@ obj.image(1).mat = M;
 [Affine2,ll2]    = spm_maff8(obj.image(1),8,(0+1)*16,obj.tpm,[],obj.affreg); % Closer to rigid
 
 % Pick the result with the best fit
-if ll1>ll2, obj.Affine  = Affine1; else obj.Affine  = Affine2; end
+if ll1>ll2
+    obj.Affine  = Affine1;
+else
+    obj.Affine  = Affine2;
+end
 
 % Initial affine registration.
 obj.Affine     = spm_maff8(obj.image(1),obj.samp*2,(obj.fwhm+1)*16,obj.tpm, obj.Affine, obj.affreg); % Closer to rigid

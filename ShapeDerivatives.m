@@ -30,7 +30,11 @@ Kv = size(Wv,5);
 Ka = size(Wa,5);
 
 K  = size(dat(1).z,1);
-if (Ka == Kv) && (Ka == K), Koff = 0; else Koff = Ka; end
+if (Ka == Kv) && (Ka == K)
+    Koff = 0;
+else
+    Koff = Ka;
+end
 
 if Kv==0, gv = zeros([Kv 0],'single'); Hv = []; nll = []; return; end
 
@@ -50,7 +54,7 @@ end
 
 nll = 0;
 % Compute 1st and 2nd derivatives w.r.t. velocities
-for k=1:Kv,
+for k=1:Kv
     gv(:,:,:,:,k) = 0;
     Hv(:,:,:,:,k) = 0;
 end
@@ -77,12 +81,16 @@ for n1=1:batchsize:numel(dat)
         f          = GetDat(dat1(n),s);
         [ll,a,Ha]  = LikelihoodDerivatives(f,a0,psi,noise,s);
         nll        = nll - ll;
-        if Ka>0, G = CompGrads(a0); else G = Gmu; end
+        if Ka>0
+            G = CompGrads(a0);
+        else
+            G = Gmu;
+        end
         [cell1{n},cell2{n}] = ShapeDerivs(a,Ha,G,s.likelihood);
     end
 
     % Add appropriate amount of gradient and Hessian
-    for k=1:Kv,
+    for k=1:Kv
         g1 = single(0);
         H1 = single(0);
         for n=1:numel(cell1)

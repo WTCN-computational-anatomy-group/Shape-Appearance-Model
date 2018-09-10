@@ -21,8 +21,8 @@ function [z,S,L,omisc] = UpdateZpar(z,f,mu,Wa,Wv,A,s,noise)
 % John Ashburner
 % $Id$
 
-CompSmo = false;
-CompMu  = false;
+%CompSmo = false;
+%CompMu  = false;
 
 a0   = GetA0(z,Wa,mu); % Compute linear combination of appearance modes
 v0   = GetV0(z,Wv);    % Linear combination of shape components
@@ -122,23 +122,23 @@ if nargout>=4
     % If necessary, compute some extra stuff that is used for the learning part of the model
     omisc = struct('s0',0,'s1',0);
 
-    if CompSmo
-        omisc.SmoSuf = 0;
-    end
-    if CompMu
-        omisc.gmu = single(0);
-        omisc.Hmu = single(0);
-    end
+    %if CompSmo
+    %    omisc.SmoSuf = 0;
+    %end
+    %if CompMu
+    %    omisc.gmu = single(0);
+    %    omisc.Hmu = single(0);
+    %end
 
     for n=1:numel(subj)
-        if CompSmo
-            % Compute sufficient statistics used for estimating the smoothness of the residuals.
-            % These are used for adjusting the number of observations via a bit of random field theory.
-            [s0,s1,SmoSuf] = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).psi,s);
-            omisc.SmoSuf   = omisc.SmoSuf + SmoSuf;
-        else
+        %if CompSmo
+        %    % Compute sufficient statistics used for estimating the smoothness of the residuals.
+        %    % These are used for adjusting the number of observations via a bit of random field theory.
+        %    [s0,s1,SmoSuf] = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).psi,s);
+        %    omisc.SmoSuf   = omisc.SmoSuf + SmoSuf;
+        %else
             [s0,s1]        = ComputeSmoSuf(subj(n).f,subj(n).a0,subj(n).psi,s);
-        end
+        %end
         % This was originally an adjustment to the sufficient statistics for computing the noise (Gaussian npoise model).
         % The idea was to make a Bayesian estimate that accounts for the uncertainty with which
         % z is estimated.  In practice though, the effect is tiny compared to the lack of independence
@@ -154,12 +154,12 @@ if nargout>=4
         omisc.s1     = omisc.s1 + s1;
         omisc.s0     = omisc.s0 + s0;
 
-        if CompMu
-            % Sufficient statistics that are used for recomouting the mean
-            [gmu,Hmu]    = LikelihoodDerivatives(subj(n).f,subj(n).a0,subj(n).psi,noise,s);
-            omisc.gmu    = omisc.gmu + gmu;
-            omisc.Hmu    = omisc.Hmu + Hmu;
-        end
+        %if CompMu
+        %    % Sufficient statistics that are used for recomouting the mean
+        %    [gmu,Hmu]    = LikelihoodDerivatives(subj(n).f,subj(n).a0,subj(n).psi,noise,s);
+        %    omisc.gmu    = omisc.gmu + gmu;
+        %    omisc.Hmu    = omisc.Hmu + Hmu;
+        %end
     end
 end
 
@@ -186,7 +186,7 @@ else
     % Shape and appearance controlled by separate z elements
     K      = Ka;
     Koff   = 0;
-end;
+end
 
 
 % Basis functions encoding appearance modes, or derivatives w.r.t. warps
@@ -266,7 +266,7 @@ for subit = 1:nsubit
         psi = [];
     end
     nll  = -LikelihoodDerivatives(f,a0,psi,noise,s) + 0.5*z'*A*z;
-    if verb, fprintf(' %g', nll); end;%ShowPic(f,a0,psi,mu,s); end
+    if verb, fprintf(' %g', nll); end %ShowPic(f,a0,psi,mu,s); end
 
     if nll>onll && abs(nll-onll)/abs(nll) > 1e-6
         armijo   = armijo*0.5;
@@ -286,25 +286,25 @@ if verb, fprintf('\n'); end
 %==========================================================================
 %
 %==========================================================================
-function ShowPic(f,a0,psi,mu,s)
-%return; % This function is disabled
-
-a1  = Pull(a0,psi);
-mu1 = Pull(mu,psi);
-
-msk = ~isfinite(f);
-ff  = f;
-switch lower(s.likelihood)
-case {'multinomial','categorical'}
-    sig     = SoftMax(a1);
-case {'binomial','binary'}
-    sig = 1./(1+exp(-a1));
-otherwise % case {'normal','gaussian'}
-    sig = a1;
-end
-ff(msk) = sig(msk);
-
-imagesc([ColourPic(ff) ColourPic(a1,s.likelihood) ColourPic(mu1,s.likelihood)]);
-axis image ij off; drawnow; %set(gca,'CLim',[0 1]); drawnow
-
+%function ShowPic(f,a0,psi,mu,s)
+%%return; % This function is disabled
+%
+%a1  = Pull(a0,psi);
+%mu1 = Pull(mu,psi);
+%
+%msk = ~isfinite(f);
+%ff  = f;
+%switch lower(s.likelihood)
+%case {'multinomial','categorical'}
+%    sig     = SoftMax(a1);
+%case {'binomial','binary'}
+%    sig = 1./(1+exp(-a1));
+%otherwise % case {'normal','gaussian'}
+%    sig = a1;
+%end
+%ff(msk) = sig(msk);
+%
+%imagesc([ColourPic(ff) ColourPic(a1,s.likelihood) ColourPic(mu1,s.likelihood)]);
+%axis image ij off; drawnow; %set(gca,'CLim',[0 1]); drawnow
+%
 

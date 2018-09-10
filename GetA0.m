@@ -24,7 +24,7 @@ if ~iscell(z) % z is a vector
     else
         a0 = mu;
     end
-    for k=1:d(5),
+    for k=1:d(5)
         a0 = a0 + Wa(:,:,:,:,k)*z(k);
     end
 else         % z is a cell array
@@ -42,7 +42,7 @@ else         % z is a cell array
             a0{n} = a0{1};
         end
     end
-    for k=1:d(5),
+    for k=1:d(5)
         Wk = Wa(:,:,:,:,k);
         for n=1:numel(a0)
             a0{n} = a0{n} + Wk*z{n}(k);

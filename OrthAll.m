@@ -41,7 +41,7 @@ Kv            = dv(5);
 K             = size(ss.ZZ,1);
 
 % Figure out the block structure of the WW matrix
-if Ka<K || Kv<K,
+if Ka<K || Kv<K
     Koff   = Ka;
     linked = false;
 else

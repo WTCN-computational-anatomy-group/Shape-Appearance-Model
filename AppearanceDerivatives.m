@@ -54,7 +54,7 @@ end
 nll = 0;
 
 % Compute 1st and 2nd derivatives w.r.t. appearance model
-for k=1:Ka,
+for k=1:Ka
     ga(:,:,:,:,k) = 0;
     Ha(:,:,:,:,k) = 0;
 end
@@ -77,7 +77,7 @@ for n1=1:batchsize:numel(dat)
         cell2{n}  = H;
     end
 
-    for k=1:Ka,
+    for k=1:Ka
         g1 = single(0);
         H1 = single(0);
         for n=1:numel(cell1)

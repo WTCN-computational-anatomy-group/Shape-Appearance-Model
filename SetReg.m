@@ -23,7 +23,7 @@ B       = eye(K)*N;
 
 if nargin<3, s = struct; end
 
-if isfield(s,'nu0') && s.nu0 > 0,
+if isfield(s,'nu0') && s.nu0 > 0
     % Get the Wishart Priors
     nu0 = s.nu0;
     if isfield(s,'Lambda0')

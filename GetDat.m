@@ -31,7 +31,17 @@ case {'nifti','char'}
         case {'.jpg','.png','.tif'}
             f = imread(deblank(dat.f(1,:)));
             d = [size(f) 1 1];
-            f = single(reshape(f,[d(1:2) 1 d(3)]));
+            f = single(f)/255;
+            msk = all(f==0,3);
+            if size(f,3)==1
+                f(msk) = NaN;
+                f = fliplr(cat(4,f',f',f'));
+            else
+                r = f(:,:,1); r(msk)=NaN;
+                g = f(:,:,2); g(msk)=NaN;
+                b = f(:,:,3); b(msk)=NaN;
+                f = fliplr(cat(4,r',g',b'));
+            end
             return
         case {'.nii','.img'}
             Nii = nifti(dat.f);

@@ -26,7 +26,7 @@ T   = zeros(K,K);
 iT  = zeros(K,K);
 
 % Figure out which blocks of ZZ should be orthogonalised.
-if Ka==K && Kv==K,
+if Ka==K && Kv==K
     ind   = {1:K};
 else
     ind  = {1:Ka,(1:Kv)+Ka};

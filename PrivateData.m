@@ -18,7 +18,7 @@ fullname = fullfile(privdir,[privnam name '_' num2str(nw) '.mat']);
 switch lower(code)
 case {'init','set'}
     data = varargin{1};
-    save(fullname,'data')
+    save(fullname,'data','-v7.3')
     pause(0.1);
 case {'get'}
     pause(0.1);

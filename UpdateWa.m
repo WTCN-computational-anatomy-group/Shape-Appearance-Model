@@ -17,7 +17,11 @@ function Wa = UpdateWa(Wa,ga,Ha,RegW,s)
 if isempty(ga)
     return;
 end
-if isfield(s,'verbose') && s.verbose == true, verb = true; else verb = false; end
+if isfield(s,'verbose') && s.verbose == true
+    verb = true;
+else
+    verb = false;
+end
 if verb, fprintf('\nWa: '); end
 
 spm_field('boundary',0);

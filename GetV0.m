@@ -16,7 +16,7 @@ function v0 = GetV0(z,Wv)
 d   = [size(Wv) 1];
 d   = d(1:5);
 if ~iscell(z)
-    if prod(d)==0,
+    if prod(d)==0
         v0 = [];
     else
         Koff = numel(z)-d(5);
@@ -27,7 +27,7 @@ if ~iscell(z)
     end
 else
     v0 = cell(size(z));
-    if prod(d)==0,
+    if prod(d)==0
         for n=1:numel(v0)
             v0{n} = [];
         end
@@ -37,7 +37,7 @@ else
             v0{n} = v0{1};
         end
         Koff = numel(z{1})-d(5);
-        for k=1:d(5),
+        for k=1:d(5)
             Wk = Wv(:,:,:,:,k);
             for n=1:numel(v0)
                 v0{n} = v0{n} + Wk*z{n}(k+Koff);

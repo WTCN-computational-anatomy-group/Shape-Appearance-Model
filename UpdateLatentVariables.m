@@ -22,8 +22,8 @@ function [dat,stats] = UpdateLatentVariables(dat,mu,Wa,Wv,noise,A,s)
 % John Ashburner
 % $Id$
 
-CompSmo = false;
-CompMu  = false;
+%CompSmo = false;
+%CompMu  = false;
 
 if isempty(dat), stats=[]; return; end
 
@@ -32,14 +32,14 @@ if isfield(s,'batchsize'), batchsize = s.batchsize; end
 
 stats = struct('N',numel(dat), 'Z',0, 'ZZ',0, 'S',0, 's0',0, 's1',0, 'L', 0);
 
-if CompSmo
-    stats.SmoSuf = 0;
-end
-if CompMu
-    d            = size(mu);
-    stats.gmu    = zeros(d,'single');
-    stats.Hmu    = single(0);
-end
+%if CompSmo
+%    stats.SmoSuf = 0;
+%end
+%if CompMu
+%    d            = size(mu);
+%    stats.gmu    = zeros(d,'single');
+%    stats.Hmu    = single(0);
+%end
 
 for n1=1:batchsize:numel(dat)
     nn    = n1:min(n1+(batchsize-1),numel(dat));
@@ -62,12 +62,12 @@ for n1=1:batchsize:numel(dat)
     stats.Z      = stats.Z      + sum(z,2);
     stats.ZZ     = stats.ZZ     + z*z';
     stats.S      = stats.S      + S;
-    if CompSmo
-        stats.SmoSuf = stats.SmoSuf + omisc.SmoSuf;
-    end
-    if CompMu
-        stats.gmu    = stats.gmu    + omisc.gmu;
-        stats.Hmu    = stats.Hmu    + omisc.Hmu;
-    end
+    %if CompSmo
+    %    stats.SmoSuf = stats.SmoSuf + omisc.SmoSuf;
+    %end
+    %if CompMu
+    %    stats.gmu    = stats.gmu    + omisc.gmu;
+    %    stats.Hmu    = stats.Hmu    + omisc.Hmu;
+    %end
 end
 

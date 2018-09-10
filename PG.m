@@ -1,3 +1,4 @@
+
 function PG(dat,s)
 % Combined principal geodesic analysis and generalized(ish) PCA
 % FORMAT PG(dat,s)
@@ -16,7 +17,7 @@ if nargin<2
     s = dat;
 end
 
-if ~isfield(s,'continue') || s.continue==false,
+if ~isfield(s,'continue') || s.continue==false
     if ~exist('s','var'), error('No settings'); end
 
     PGdistribute('init',s);
@@ -73,7 +74,7 @@ else
 
     WWa   = UpdateWWa(Wa,s);
     WWv   = UpdateWWv(Wv,s);
-    [Wa,Wv,WWa,WWv,ss,WW] = OrthAll(Wa,Wv,WWa,WWv,ss,s);
+    [Wa,Wv,WWa,WWv,ss,~] = OrthAll(Wa,Wv,WWa,WWv,ss,s);
 end
 
 if ~isfield(s,'lambda'), s.lambda = [1 1];    end
@@ -88,7 +89,7 @@ if isfield(s,'debug') && s.debug
     drawnow
 end
 
-for iter = 1:maxit,
+for iter = 1:maxit
     fprintf('%-3d    ', iter);
 
     [Wa,Wv,WW,s.omega] = Mstep(mu,Wa,Wv,noise,B,ss.ZZ,A,WWa,WWv,s);
@@ -133,7 +134,7 @@ for iter = 1:maxit,
     RegZ   = double(s.lambda(1)*A + s.lambda(2)*WW);
     dat    = PGdistribute('Collect');
     save(fullfile(s.result_dir,['train' s.result_name '.mat']),...
-        'Wa','Wv','WWa','WWv','mat','dat','ss','A','B','RegZ','mu','s','noise','dat');
+        'Wa','Wv','WWa','WWv','mat','dat','ss','A','B','RegZ','mu','s','noise','dat','-v7.3');
 
     if isfield(s,'debug') && s.debug
         subplot(2,2,1); image(ColourPic(mu,s.likelihood)); axis image ij off;

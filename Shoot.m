@@ -53,10 +53,10 @@ if isempty(v0)
 end
 
 args0 = 8;
-if nargin<3,
+if nargin<3
     args = args0;
 else
-    if numel(args)<numel(args0),
+    if numel(args)<numel(args0)
         args = [args args0((numel(args)+1):end)];
     end
 end
@@ -71,7 +71,7 @@ id    = Identity(d);
 %    varargout{2} = v0;
 %end
 
-if ~isfinite(T),
+if ~isfinite(T)
     % Number of time steps from an educated guess about how far to move
     T = double(floor(sqrt(max(max(max(v0(:,:,:,1).^2+v0(:,:,:,2).^2+v0(:,:,:,3).^2)))))+1);
 end
