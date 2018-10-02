@@ -67,6 +67,7 @@ else
 
     % Should really include some checks here
     PGdistribute('init',s);
+    PGdistribute('share',dat);
     [ss.N,ss.Z,ss.ZZ,ss.S] = PGdistribute('GetZZ');
     Cv    = eye(size(ss.ZZ))*max(diag(ss.ZZ))/ss.N*0.1; % Break symmetry if necessary
     PGdistribute('AddRandZ',Cv);
